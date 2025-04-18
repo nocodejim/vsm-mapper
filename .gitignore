@@ -1,0 +1,8 @@
+    # Ignore OS-specific files
+    .DS_Store
+    Thumbs.db
+
+    # Ignore generated diagrams (optional, depends on workflow)
+    # diagrams/*.mmd
+
+    # Add any other files/directories to ignore

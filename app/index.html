@@ -1,0 +1,373 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Value Stream Map Mermaid Generator</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Add a little extra spacing for clarity */
+            .input-group {
+                margin-bottom: 1rem;
+                padding: 1rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.375rem; /* rounded-md */
+            }
+            .input-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 500; /* medium */
+            }
+            .input-group input {
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid #cbd5e1; /* border-gray-300 */
+                border-radius: 0.375rem; /* rounded-md */
+            }
+            /* Style the remove button */
+            .remove-btn {
+                 background-color: #f87171; /* bg-red-400 */
+                 color: white;
+                 padding: 0.25rem 0.5rem;
+                 border-radius: 0.375rem; /* rounded-md */
+                 font-size: 0.875rem; /* text-sm */
+                 cursor: pointer;
+                 margin-left: 0.5rem;
+            }
+            .remove-btn:hover {
+                 background-color: #ef4444; /* bg-red-500 */
+            }
+             /* Style the add button */
+            .add-btn {
+                 background-color: #34d399; /* bg-emerald-400 */
+                 color: white;
+                 padding: 0.5rem 1rem;
+                 border-radius: 0.375rem; /* rounded-md */
+                 cursor: pointer;
+                 margin-top: 1rem;
+                 display: inline-block;
+            }
+            .add-btn:hover {
+                 background-color: #10b981; /* bg-emerald-500 */
+            }
+            /* Style the generate button */
+            .generate-btn {
+                 background-color: #60a5fa; /* bg-blue-400 */
+                 color: white;
+                 padding: 0.75rem 1.5rem;
+                 border-radius: 0.375rem; /* rounded-md */
+                 cursor: pointer;
+                 font-size: 1rem; /* text-base */
+                 font-weight: 600; /* font-semibold */
+                 margin-top: 1.5rem;
+                 width: 100%;
+            }
+            .generate-btn:hover {
+                 background-color: #3b82f6; /* bg-blue-500 */
+            }
+            /* Style the output area */
+            #mermaidOutput {
+                font-family: monospace;
+                white-space: pre;
+                background-color: #f3f4f6; /* bg-gray-100 */
+                border: 1px solid #d1d5db; /* border-gray-300 */
+                border-radius: 0.375rem; /* rounded-md */
+                padding: 1rem;
+                margin-top: 1.5rem;
+                min-height: 200px; /* Ensure it has some height */
+                overflow-x: auto; /* Allow horizontal scrolling if needed */
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 font-sans p-8">
+        <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Value Stream Map Mermaid Generator</h1>
+
+            <form id="vsmForm">
+                <div id="stepsContainer">
+                    <div class="input-group" data-step-id="0">
+                        <h3 class="text-lg font-semibold mb-2">Step 1</h3>
+                        <label for="stepName0">Step Name:</label>
+                        <input type="text" id="stepName0" name="stepName" required placeholder="e.g., Feature Request">
+
+                        <label for="processTime0" class="mt-2">Process Time (e.g., '2 days'):</label>
+                        <input type="text" id="processTime0" name="processTime" required placeholder="e.g., 2 days">
+
+                        <label for="waitTime0" class="mt-2">Wait Time Before This Step (e.g., '5 days', leave blank for first step):</label>
+                        <input type="text" id="waitTime0" name="waitTime" placeholder="e.g., 5 days">
+                        </div>
+                </div>
+
+                <button type="button" id="addStepBtn" class="add-btn">Add Another Step</button>
+
+                <button type="submit" class="generate-btn">Generate Mermaid Code</button>
+            </form>
+
+            <div id="outputContainer" class="mt-6" style="display: none;">
+                <h2 class="text-xl font-semibold mb-2 text-gray-700">Generated Mermaid Code:</h2>
+                <p class="text-sm text-gray-600 mb-2">Copy the code below and save it in a file named `your_diagram_name.mmd` inside the `diagrams` directory. You can then view it using a Mermaid viewer (like the VS Code extension or online tools).</p>
+                <textarea id="mermaidOutput" readonly class="w-full h-64"></textarea>
+                 <button id="copyButton" class="mt-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                    Copy Code
+                </button>
+                 <p id="copyFeedback" class="text-sm text-green-600 mt-1" style="display: none;">Copied to clipboard!</p>
+            </div>
+        </div>
+
+        <script>
+            // --- SCRIPT START ---
+            console.log("VSM Generator script loaded.");
+
+            // --- Global Variables ---
+            let stepCounter = 1; // Start counting from 1 for user display, 0 for array index
+
+            // --- DOM Elements ---
+            const form = document.getElementById('vsmForm');
+            const stepsContainer = document.getElementById('stepsContainer');
+            const addStepBtn = document.getElementById('addStepBtn');
+            const outputContainer = document.getElementById('outputContainer');
+            const mermaidOutput = document.getElementById('mermaidOutput');
+            const copyButton = document.getElementById('copyButton');
+            const copyFeedback = document.getElementById('copyFeedback');
+
+
+            // --- Functions ---
+
+            /**
+             * Adds a new set of input fields for a VSM step.
+             */
+            function addStepInput() {
+                console.log(`Adding step ${stepCounter + 1}`);
+                const stepId = stepCounter; // Unique ID for this step's elements
+
+                const newStepDiv = document.createElement('div');
+                newStepDiv.classList.add('input-group');
+                newStepDiv.setAttribute('data-step-id', stepId); // Keep track of the step ID
+
+                newStepDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">Step ${stepId + 1}</h3>
+                        <button type="button" class="remove-btn" onclick="removeStep(${stepId})">Remove</button>
+                    </div>
+                    <label for="stepName${stepId}">Step Name:</label>
+                    <input type="text" id="stepName${stepId}" name="stepName" required placeholder="e.g., Requirements">
+
+                    <label for="processTime${stepId}" class="mt-2">Process Time (e.g., '1 day'):</label>
+                    <input type="text" id="processTime${stepId}" name="processTime" required placeholder="e.g., 1 day">
+
+                    <label for="waitTime${stepId}" class="mt-2">Wait Time Before This Step (e.g., '5 days'):</label>
+                    <input type="text" id="waitTime${stepId}" name="waitTime" required placeholder="e.g., 5 days">
+                `;
+
+                stepsContainer.appendChild(newStepDiv);
+                stepCounter++; // Increment for the next step
+                console.log(`Step ${stepCounter} added. Total steps now: ${stepCounter}`);
+            }
+
+            /**
+             * Removes a step's input fields.
+             * @param {number} stepIdToRemove - The ID of the step to remove.
+             */
+            function removeStep(stepIdToRemove) {
+                console.log(`Attempting to remove step with ID: ${stepIdToRemove}`);
+                const stepToRemove = stepsContainer.querySelector(`[data-step-id="${stepIdToRemove}"]`);
+                if (stepToRemove) {
+                    stepsContainer.removeChild(stepToRemove);
+                    console.log(`Successfully removed step with ID: ${stepIdToRemove}`);
+                    // Note: We don't decrement stepCounter here to avoid ID collisions if steps are added again.
+                    // We also don't re-number the steps dynamically to keep it simple.
+                } else {
+                     console.warn(`Could not find step with ID: ${stepIdToRemove} to remove.`);
+                }
+            }
+
+            /**
+             * Extracts data from the form inputs.
+             * @returns {Array<Object>} An array of step objects, each with name, processTime, and waitTime.
+             */
+            function getFormData() {
+                console.log("Getting form data...");
+                const steps = [];
+                const stepDivs = stepsContainer.querySelectorAll('.input-group');
+                console.log(`Found ${stepDivs.length} step input groups.`);
+
+                stepDivs.forEach((div, index) => {
+                    const stepId = div.getAttribute('data-step-id');
+                    const nameInput = div.querySelector(`input[name="stepName"]`);
+                    const processTimeInput = div.querySelector(`input[name="processTime"]`);
+                    const waitTimeInput = div.querySelector(`input[name="waitTime"]`);
+
+                    if (nameInput && processTimeInput && waitTimeInput) {
+                        const stepData = {
+                            id: `S${index}`, // Assign a simple ID like S0, S1, etc.
+                            name: nameInput.value.trim(),
+                            processTime: processTimeInput.value.trim(),
+                            waitTime: waitTimeInput.value.trim() || null // Store null if wait time is empty
+                        };
+                         console.log(`Data for Step ${index + 1} (ID: ${stepData.id}):`, stepData);
+                        steps.push(stepData);
+                    } else {
+                        console.error(`Could not find all inputs for step group with data-step-id: ${stepId}`);
+                    }
+                });
+                console.log("Form data collected:", steps);
+                return steps;
+            }
+
+            /**
+             * Generates the Mermaid diagram string.
+             * @param {Array<Object>} stepsData - Array of step objects from getFormData.
+             * @returns {string} The Mermaid diagram definition string.
+             */
+            function generateMermaidCode(stepsData) {
+                console.log("Generating Mermaid code...");
+                if (!stepsData || stepsData.length === 0) {
+                    console.warn("No step data provided to generate Mermaid code.");
+                    return "graph LR\n    %% No steps entered";
+                }
+
+                let mermaidString = "graph LR\n"; // LR = Left to Right graph
+                let totalProcessTime = 0;
+                let totalWaitTime = 0;
+
+                // Add process flow links
+                console.log("Adding process flow links...");
+                for (let i = 0; i < stepsData.length; i++) {
+                    const step = stepsData[i];
+                    // Define the node: ID[Name]
+                    mermaidString += `    ${step.id}[${step.name}]\n`;
+
+                    // Link to the next step with process time
+                    if (i < stepsData.length - 1) {
+                        const nextStep = stepsData[i + 1];
+                        mermaidString += `    ${step.id} -->|${step.processTime}| ${nextStep.id}\n`;
+                    } else {
+                         // Last step's process time contributes to total but isn't a label on an arrow
+                         // We'll handle its time calculation below.
+                    }
+
+                    // Add process time to total (extract number, assume 'days' or similar unit)
+                     const ptMatch = step.processTime.match(/\d+/);
+                     if (ptMatch) {
+                        totalProcessTime += parseInt(ptMatch[0], 10);
+                     } else {
+                        console.warn(`Could not parse process time number from: ${step.processTime}`);
+                     }
+                }
+
+                 // Add wait time links (dotted lines) and calculate total wait time
+                 console.log("Adding wait time links...");
+                 mermaidString += "\n    %% Add wait times\n";
+                 for (let i = 1; i < stepsData.length; i++) { // Start from the second step (index 1)
+                     const step = stepsData[i];
+                     const prevStep = stepsData[i - 1];
+                     if (step.waitTime) {
+                         mermaidString += `    ${prevStep.id} -.->|Wait: ${step.waitTime}| ${step.id}\n`;
+                         // Add wait time to total
+                         const wtMatch = step.waitTime.match(/\d+/);
+                         if (wtMatch) {
+                             totalWaitTime += parseInt(wtMatch[0], 10);
+                         } else {
+                             console.warn(`Could not parse wait time number from: ${step.waitTime}`);
+                         }
+                     }
+                 }
+
+                 // Add Metrics subgraph
+                 console.log("Adding metrics subgraph...");
+                 const leadTime = totalProcessTime + totalWaitTime;
+                 // Calculate Flow Efficiency (Process Time / Lead Time) * 100
+                 // Avoid division by zero if leadTime is 0
+                 const flowEfficiency = leadTime > 0 ? Math.round((totalProcessTime / leadTime) * 100) : 0;
+
+                 mermaidString += `\n    %% Add process metrics\n`;
+                 mermaidString += `    subgraph Metrics\n`;
+                 // Assuming time unit is consistent (e.g., 'days') - adjust if needed
+                 mermaidString += `        PT[Process Time: ${totalProcessTime} units]\n`;
+                 mermaidString += `        LT[Lead Time: ${leadTime} units]\n`;
+                 mermaidString += `        FE[Flow Efficiency: ${flowEfficiency}%]\n`;
+                 mermaidString += `    end\n`;
+
+                console.log("Mermaid code generation complete.");
+                return mermaidString;
+            }
+
+             /**
+              * Handles the form submission event.
+              * @param {Event} event - The form submission event.
+              */
+             function handleSubmit(event) {
+                 event.preventDefault(); // Prevent default page reload
+                 console.log("Form submitted.");
+
+                 try {
+                     const formData = getFormData();
+                     if (formData.length === 0) {
+                         alert("Please add at least one step.");
+                         console.warn("Form submission attempt with no steps.");
+                         return;
+                     }
+
+                     const mermaidCode = generateMermaidCode(formData);
+                     mermaidOutput.value = mermaidCode; // Display in textarea
+                     outputContainer.style.display = 'block'; // Show the output area
+                     console.log("Mermaid code displayed in output area.");
+
+                 } catch (error) {
+                     console.error("Error during form submission or Mermaid generation:", error);
+                     alert("An error occurred while generating the diagram. Check the console for details.");
+                 }
+             }
+
+            /**
+             * Copies the generated Mermaid code to the clipboard.
+             */
+            function copyToClipboard() {
+                mermaidOutput.select(); // Select the text
+                mermaidOutput.setSelectionRange(0, 99999); // For mobile devices
+
+                try {
+                    navigator.clipboard.writeText(mermaidOutput.value)
+                        .then(() => {
+                            console.log("Mermaid code copied to clipboard.");
+                            copyFeedback.style.display = 'inline'; // Show feedback
+                            setTimeout(() => {
+                                copyFeedback.style.display = 'none'; // Hide after 2 seconds
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy text: ', err);
+                            alert('Failed to copy text. Please copy it manually.');
+                        });
+                } catch (err) {
+                     console.error('Clipboard API not available or failed: ', err);
+                     // Fallback for older browsers (less reliable)
+                     try {
+                         document.execCommand('copy');
+                         console.log("Mermaid code copied to clipboard (using execCommand fallback).");
+                         copyFeedback.style.display = 'inline';
+                         setTimeout(() => { copyFeedback.style.display = 'none'; }, 2000);
+                     } catch (execErr) {
+                         console.error('execCommand fallback failed: ', execErr);
+                         alert('Failed to copy text automatically. Please select and copy it manually.');
+                     }
+                }
+            }
+
+
+            // --- Event Listeners ---
+            addStepBtn.addEventListener('click', addStepInput);
+            form.addEventListener('submit', handleSubmit);
+            copyButton.addEventListener('click', copyToClipboard);
+
+
+            // --- Initial Setup ---
+            console.log("Adding initial event listeners.");
+             // Optional: Add a second step by default for easier start
+             // addStepInput();
+
+            // --- SCRIPT END ---
+        </script>
+    </body>
+    </html>
+    
