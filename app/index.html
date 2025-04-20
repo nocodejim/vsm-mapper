@@ -119,10 +119,18 @@
          #saveMarkdownBtn:hover:not(:disabled) {
              background-color: #16a34a; /* bg-green-600 */
          }
+         /* Footer Styling */
+         footer {
+             margin-top: 2rem; /* Space above footer */
+             padding-top: 1rem; /* Space inside footer */
+             border-top: 1px solid #e5e7eb; /* border-gray-200 */
+             font-size: 0.875rem; /* text-sm */
+             color: #6b7280; /* text-gray-500 */
+         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans p-8">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+<body class="bg-gray-50 font-sans p-8 flex flex-col min-h-screen">
+    <div class="flex-grow max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md w-full">
         <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Value Stream Map Mermaid Generator</h1>
 
         <form id="vsmForm">
@@ -162,7 +170,12 @@
              <p id="copyFeedback" class="text-sm text-green-600 mt-1" style="display: none;">Copied to clipboard!</p>
              <p id="saveFeedback" class="text-sm text-blue-600 mt-1" style="display: none;">Markdown file download initiated.</p>
         </div>
-    </div>
+    </div> <footer class="max-w-2xl mx-auto w-full mt-auto px-6 pb-6">
+         <div class="flex justify-between items-center">
+             <span>VSM Mapper Version: %%APP_VERSION%%</span>
+             <span>Image Build: %%APP_VERSION%%</span>
+         </div>
+    </footer>
 
     <script>
         // --- SCRIPT START ---
