@@ -35,7 +35,13 @@ graph LR
         LT[Lead Time: 66 units]
         FE[Flow Efficiency: 62%]
     end
-Input Data for Scenario 1:("Idea & Hypothesis", "2d", "")("UX Research & Mockups", "5d", "1d")("Eng Design Doc & Review", "4d", "3d")("Prototyping & User Study", "8d", "2d")("Core Implementation", "15d", "5d")("Integration & Canary Testing", "7d", "10d")("Staged Rollout & Monitoring", "0d", "4d")  (Note: Last step process time is 0 for calculation as monitoring is ongoing)(Calculation Check: PT=2+5+4+8+15+7+0=41. Wait=1+3+2+5+10+4=25. LT=41+25=66. FE=41/66=62%)Scenario 2: Android Critical Bug Fix Process (Expedited)Focuses on rapid identification, fix, testing, and patch release.Shorter wait times due to urgency.graph LR
+'''
+
+Input Data for Scenario 1:("Idea & Hypothesis", "2d", "")("UX Research & Mockups", "5d", "1d")("Eng Design Doc & Review", "4d", "3d")("Prototyping & User Study", "8d", "2d")("Core Implementation", "15d", "5d")("Integration & Canary Testing", "7d", "10d")("Staged Rollout & Monitoring", "0d", "4d")  (Note: Last step process time is 0 for calculation as monitoring is ongoing)(Calculation Check: PT=2+5+4+8+15+7+0=41. Wait=1+3+2+5+10+4=25. LT=41+25=66. FE=41/66=62%)
+
+Scenario 2: Android Critical Bug Fix Process (Expedited)Focuses on rapid identification, fix, testing, and patch release.Shorter wait times due to urgency.
+''' mermaid
+graph LR
     S0["Bug Report Triaged (P0)"]
     S0 -->|4h| S1
     S1["Root Cause Analysis"]
@@ -64,7 +70,12 @@ Input Data for Scenario 1:("Idea & Hypothesis", "2d", "")("UX Research & Mockups
         LT[Lead Time: 47 units]
         FE[Flow Efficiency: 77%]
     end
-Input Data for Scenario 2:("Bug Report Triaged (P0)", "4h", "")("Root Cause Analysis", "8h", "1h")("Fix Implementation", "6h", "2h")("Code Review & Merge", "2h", "1h")("Targeted Build & QA", "12h", "1h")("Patch Release Prep", "4h", "4h")("OTA Rollout", "0h", "2h") (Last step PT=0)(Calculation Check: PT=4+8+6+2+12+4+0=36. Wait=1+2+1+1+4+2=11. LT=36+11=47. FE=36/47=77%)Scenario 3: Pixel Hardware Component IterationIncludes hardware design, supplier interaction, and manufacturing steps.Longer lead times are typical.graph LR
+'''
+Input Data for Scenario 2:("Bug Report Triaged (P0)", "4h", "")("Root Cause Analysis", "8h", "1h")("Fix Implementation", "6h", "2h")("Code Review & Merge", "2h", "1h")("Targeted Build & QA", "12h", "1h")("Patch Release Prep", "4h", "4h")("OTA Rollout", "0h", "2h") (Last step PT=0)(Calculation Check: PT=4+8+6+2+12+4+0=36. Wait=1+2+1+1+4+2=11. LT=36+11=47. FE=36/47=77%)
+
+Scenario 3: Pixel Hardware Component IterationIncludes hardware design, supplier interaction, and manufacturing steps.Longer lead times are typical.
+''' mermaid
+graph LR
     S0["Concept & Feasibility"]
     S0 -->|10d| S1
     S1["Schematic Design & Simulation"]
@@ -93,4 +104,5 @@ Input Data for Scenario 2:("Bug Report Triaged (P0)", "4h", "")("Root Cause Anal
         LT[Lead Time: 177 units]
         FE[Flow Efficiency: 62%]
     end
+'''
 Input Data for Scenario 3:("Concept & Feasibility", "10d", "")("Schematic Design & Simulation", "15d", "5d")("Component Selection & Sourcing", "20d", "10d")("PCB Layout & Review", "10d", "15d")("Prototype Build (EVT)", "25d", "7d")("Validation & Testing", "30d", "20d")("Design Revision (DVT Prep)", "0d", "10d") (Last step PT=0)*(Calculation Check: PT=10+15+20+10+25+30+0=110. Wait=5+10
