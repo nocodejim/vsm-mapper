@@ -57,14 +57,13 @@ TEST_STEPS_DATA = [
     ("Test", "5", "12"),                # Step 5
     ("Production", "1", "14")           # Step 6 (Process time used for calc, not shown on arrow)
                                         # Note: The expected output has PT=27 (1+3+3+14+5+1=27), Wait=5+5+14+12+14=50, LT=77. FE=27/77=35%
-                                        # Let's adjust the last step's process time to match the expected PT=27
-                                        # 1+3+3+14+5 = 26. So last step PT should be 1. Wait times: 5+5+14+12+14 = 50. LT=27+50=77. FE=27/77=35.06 -> 35%
 ]
-# This line was outside the list definition, fixed it:
-# TEST_STEPS_DATA[5] = ("Production", "1", "14") # Correcting last step process time to 1
-
 
 # --- Helper Functions ---
+
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 def setup_driver(download_dir):
     """Sets up the Chrome WebDriver with specific download options."""
@@ -91,26 +90,34 @@ def setup_driver(download_dir):
     options.add_argument("--window-size=1920,1080") # Specify window size
 
     try:
-        driver = webdriver.Chrome(options=options)
+        # Use webdriver_manager to handle driver installation
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
         print("WebDriver initialized successfully.")
         return driver
     except Exception as e:
         print(f"Error initializing WebDriver: {e}")
-        print("Ensure ChromeDriver is installed and accessible, or use webdriver-manager.")
+        print("Ensure Chrome is installed correctly.")
         return None
-
+    
 def fill_step_data(driver, step_index, step_data):
     """Fills the input fields for a specific step."""
     print(f"Filling data for Step {step_index + 1}: {step_data[0]}")
     name, process_time, wait_time = step_data
     try:
-        # Find elements based on the step index (data-step-id attribute)
-        # Use WebDriverWait for robustness
-        step_group = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, f".input-group[data-step-id='{step_index}']"))
+        # Find all input groups and get the one at the specified index
+        step_groups = WebDriverWait(driver, 5).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".input-group"))
         )
-        # step_group = driver.find_element(By.CSS_SELECTOR, f".input-group[data-step-id='{step_index}']") # Original less robust line
-
+        
+        if step_index >= len(step_groups):
+            print(f"Error: Not enough step groups found. Needed index {step_index}, found {len(step_groups)} groups.")
+            return False
+            
+        step_group = step_groups[step_index]
+        step_id = step_group.get_attribute("data-step-id")
+        
+        # Find inputs within the specific step group
         name_input = step_group.find_element(By.CSS_SELECTOR, f"input[name='stepName']")
         process_time_input = step_group.find_element(By.CSS_SELECTOR, f"input[name='processTime']")
         wait_time_input = step_group.find_element(By.CSS_SELECTOR, f"input[name='waitTime']")
@@ -238,26 +245,35 @@ if __name__ == "__main__":
 
         # 3. Fill the form data
         print("Filling form data...")
-        for i, step_data in enumerate(TEST_STEPS_DATA):
-            if i > 0: # Add step button needed for steps after the first
-                try:
-                    add_button = WebDriverWait(driver, 5).until(
-                        EC.element_to_be_clickable((By.ID, "addStepBtn"))
-                    )
-                    add_button.click()
-                    print(f"Clicked 'Add Another Step' for Step {i + 1}")
-                    # Wait for the new step group to be added before proceeding
-                    WebDriverWait(driver, 5).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, f".input-group[data-step-id='{i}']"))
-                    )
-                except TimeoutException:
-                     print(f"Error: Could not find/click 'Add Another Step' or new step group did not appear before Step {i + 1}")
-                     errors.append("Could not click 'Add Step' button or step group missing.")
-                     raise # Stop test if essential button fails
-
-            if not fill_step_data(driver, i, step_data):
-                errors.append(f"Failed to fill data for Step {i + 1}.")
-                raise Exception(f"Data entry failed for Step {i + 1}.") # Stop test
+        # First step is already created by default in the new version
+        # Just fill the first step data
+        if not fill_step_data(driver, 0, TEST_STEPS_DATA[0]):
+            errors.append(f"Failed to fill data for Step 1.")
+            raise Exception(f"Data entry failed for Step 1.") # Stop test
+            
+        # Add and fill the remaining steps
+        for i in range(1, len(TEST_STEPS_DATA)):
+            try:
+                # Click "Add Step at End" button for steps after the first
+                add_button = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((By.ID, "addStepEndBtn"))
+                )
+                add_button.click()
+                print(f"Clicked 'Add Step at End' for Step {i + 1}")
+                
+                # Wait for all step groups to be updated
+                WebDriverWait(driver, 5).until(
+                    lambda d: len(d.find_elements(By.CSS_SELECTOR, ".input-group")) >= i + 1
+                )
+                
+                if not fill_step_data(driver, i, TEST_STEPS_DATA[i]):
+                    errors.append(f"Failed to fill data for Step {i + 1}.")
+                    raise Exception(f"Data entry failed for Step {i + 1}.") # Stop test
+                    
+            except TimeoutException:
+                print(f"Error: Could not find/click 'Add Step at End' or new step group did not appear before Step {i + 1}")
+                errors.append("Could not click 'Add Step at End' button or step group missing.")
+                raise # Stop test if essential button fails
 
         # 4. Generate the code
         print("Clicking 'Generate Mermaid Code'...")
@@ -378,18 +394,5 @@ if __name__ == "__main__":
         #      os.remove(downloaded_file)
         # elif not test_passed and downloaded_file:
         #      print(f"Keeping failed downloaded file for inspection: {downloaded_file}")
-
-        # Optional: Delete the download directory if it was created by the script and is empty
-        # Be cautious with auto-deletion, especially if DOWNLOAD_DIR is not temporary
-        # if os.path.exists(DOWNLOAD_DIR) and DOWNLOAD_DIR.startswith("/tmp"): # Example safety check
-        #     try:
-        #         if not os.listdir(DOWNLOAD_DIR): # Only delete if empty
-        #             print(f"Deleting empty test download directory: {DOWNLOAD_DIR}")
-        #             os.rmdir(DOWNLOAD_DIR)
-        #         else:
-        #             print(f"Keeping non-empty download directory: {DOWNLOAD_DIR}")
-        #     except Exception as e:
-        #         print(f"Could not delete download directory {DOWNLOAD_DIR}: {e}")
-
 
         print("--------------------\nTest finished.")

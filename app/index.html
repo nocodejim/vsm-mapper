@@ -6,189 +6,210 @@
     <title>Value Stream Map Mermaid Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Add a little extra spacing for clarity */
+        /* General body and layout styling */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter as a common, clean font */
+        }
         .input-group {
             margin-bottom: 1rem;
             padding: 1rem;
             border: 1px solid #e2e8f0; /* border-gray-200 */
             border-radius: 0.375rem; /* rounded-md */
+            position: relative; /* For positioning the insert button */
+            background-color: #f9fafb; /* bg-gray-50 slightly different from body for contrast */
         }
         .input-group label, .title-group label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500; /* medium */
-            color: #4b5563; /* text-gray-600 */
+            color: #374151; /* text-gray-700 for better contrast */
         }
-         .input-group input, .title-group input {
+        .input-group input, .title-group input {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #cbd5e1; /* border-gray-300 */
+            padding: 0.75rem; /* Increased padding for better touch targets */
+            border: 1px solid #d1d5db; /* border-gray-300 */
             border-radius: 0.375rem; /* rounded-md */
-            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            box-sizing: border-box;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
-         .title-group {
-             margin-bottom: 1.5rem; /* More space before steps */
-         }
-        /* Style the remove button */
-        .remove-btn {
-             background-color: #f87171; /* bg-red-400 */
-             color: white;
-             padding: 0.25rem 0.5rem;
-             border-radius: 0.375rem; /* rounded-md */
-             font-size: 0.875rem; /* text-sm */
-             cursor: pointer;
-             margin-left: 0.5rem;
-             border: none;
+        .input-group input:focus, .title-group input:focus {
+            border-color: #2563eb; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); /* focus:ring-blue-200 focus:ring-opacity-50 */
+            outline: none;
         }
-        .remove-btn:hover {
-             background-color: #ef4444; /* bg-red-500 */
+        .title-group { margin-bottom: 1.5rem; }
+
+        /* Button styling */
+        .btn { /* Common button class */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            display: inline-flex; /* For aligning icon and text if any */
+            align-items: center;
+            justify-content: center;
         }
-         /* Style the add button */
-        .add-btn {
-             background-color: #34d399; /* bg-emerald-400 */
-             color: white;
-             padding: 0.5rem 1rem;
-             border-radius: 0.375rem; /* rounded-md */
-             cursor: pointer;
-             margin-top: 1rem;
-             display: inline-block;
-             border: none;
+        .btn:hover {
+            transform: translateY(-1px); /* Slight lift on hover */
         }
-        .add-btn:hover {
+        .btn:active {
+            transform: translateY(0px); /* Press down effect */
+        }
+
+        .remove-btn { 
+            background-color: #ef4444; /* bg-red-500 */ 
+            margin-left: 0.5rem; 
+            padding: 0.375rem 0.625rem; /* Match + button padding */
+            font-size: 1rem; /* Match + button size */
+        }
+        .remove-btn:hover { background-color: #dc2626; /* bg-red-600 */ }
+
+        .insert-btn-before {
+            background-color: #3b82f6; /* bg-blue-500 */
+            padding: 0.375rem 0.625rem; /* Slightly smaller for an icon-like button */
+            font-size: 1rem; /* Make the '+' larger */
+        }
+        .insert-btn-before:hover { background-color: #2563eb; /* bg-blue-600 */ }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .step-header h3 {
+            color: #1f2937; /* text-gray-800 */
+        }
+        .step-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Space between insert and remove buttons */
+        }
+
+        .add-btn-end {
              background-color: #10b981; /* bg-emerald-500 */
         }
-        /* Style the generate button */
+        .add-btn-end:hover { background-color: #059669; /* bg-emerald-600 */ }
+
         .generate-btn {
-             background-color: #60a5fa; /* bg-blue-400 */
-             color: white;
+             background-color: #6366f1; /* bg-indigo-500 */
              padding: 0.75rem 1.5rem;
-             border-radius: 0.375rem; /* rounded-md */
-             cursor: pointer;
-             font-size: 1rem; /* text-base */
-             font-weight: 600; /* font-semibold */
+             font-size: 1rem;
+             font-weight: 600;
              margin-top: 1.5rem;
              width: 100%;
-             border: none;
         }
-        .generate-btn:hover {
-             background-color: #3b82f6; /* bg-blue-500 */
-        }
-        /* Style the output area */
+        .generate-btn:hover { background-color: #4f46e5; /* bg-indigo-600 */ }
+
         #mermaidOutput {
-            font-family: monospace;
+            font-family: 'Fira Code', 'Source Code Pro', monospace; /* Monospaced font for code */
             white-space: pre;
             background-color: #f3f4f6; /* bg-gray-100 */
             border: 1px solid #d1d5db; /* border-gray-300 */
             border-radius: 0.375rem; /* rounded-md */
             padding: 1rem;
             margin-top: 1.5rem;
-            min-height: 200px; /* Ensure it has some height */
-            overflow-x: auto; /* Allow horizontal scrolling if needed */
+            min-height: 200px;
+            overflow-x: auto;
             width: 100%;
             box-sizing: border-box;
+            line-height: 1.6;
         }
-         /* Style output action buttons */
-         .output-actions {
-             margin-top: 0.75rem; /* space above buttons */
-             display: flex;
-             gap: 0.5rem; /* space between buttons */
+         .output-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+         .output-actions button { /* Inherits .btn styling, specific overrides below */
+            font-weight: 500;
          }
-         .output-actions button {
-             padding: 0.5rem 1rem;
-             border-radius: 0.375rem; /* rounded-md */
-             cursor: pointer;
-             font-weight: 500;
-             border: none;
-             transition: background-color 0.2s ease-in-out;
-         }
-         .output-actions button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
-         }
-         #copyButton {
-             background-color: #9ca3af; /* bg-gray-400 */
-             color: white;
-         }
-         #copyButton:hover:not(:disabled) {
-             background-color: #6b7280; /* bg-gray-500 */
-         }
-         #saveMarkdownBtn {
-             background-color: #22c55e; /* bg-green-500 */
-             color: white;
-         }
-         #saveMarkdownBtn:hover:not(:disabled) {
-             background-color: #16a34a; /* bg-green-600 */
-         }
-         /* Footer Styling */
+         .output-actions button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+         #copyButton { background-color: #6b7280; /* bg-gray-500 */ }
+         #copyButton:hover:not(:disabled) { background-color: #4b5563; /* bg-gray-600 */ }
+         #saveMarkdownBtn { background-color: #0ea5e9; /* bg-sky-500 */ }
+         #saveMarkdownBtn:hover:not(:disabled) { background-color: #0284c7; /* bg-sky-600 */ }
+
          footer {
-             margin-top: 2rem; /* Space above footer */
-             padding-top: 1rem; /* Space inside footer */
+             margin-top: 2rem;
+             padding-top: 1rem;
              border-top: 1px solid #e5e7eb; /* border-gray-200 */
              font-size: 0.875rem; /* text-sm */
              color: #6b7280; /* text-gray-500 */
          }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-sans p-8 flex flex-col min-h-screen">
-    <div class="flex-grow max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md w-full">
-        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Value Stream Map Mermaid Generator</h1>
+<body class="bg-gray-100 font-sans p-4 sm:p-8 flex flex-col min-h-screen">
+    <div class="flex-grow max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-xl w-full">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Value Stream Map Generator</h1>
 
         <form id="vsmForm">
             <div class="title-group">
-                <label for="titleInput">Diagram Title (Optional, used for filename):</label>
-                <input type="text" id="titleInput" name="titleInput" placeholder="e.g., My Awesome VSM">
+                <label for="titleInput" class="text-gray-700">Diagram Title (Optional):</label>
+                <input type="text" id="titleInput" name="titleInput" placeholder="e.g., New Feature Rollout Process">
             </div>
 
-            <div id="stepsContainer">
-                <div class="input-group" data-step-id="0">
-                    <h3 class="text-lg font-semibold mb-2">Step 1</h3>
-                    <label for="stepName0">Step Name:</label>
-                    <input type="text" id="stepName0" name="stepName" required placeholder="e.g., Feature Request">
+            <div id="stepsContainer" class="space-y-4">
+                </div>
 
-                    <label for="processTime0" class="mt-2">Process Time (e.g., '2 days'):</label>
-                    <input type="text" id="processTime0" name="processTime" required placeholder="e.g., 2 days">
+            <button type="button" id="addStepEndBtn" class="btn add-btn-end mt-6">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                Add Step at End
+            </button>
 
-                    <label for="waitTime0" class="mt-2">Wait Time Before This Step (leave blank for first step):</label>
-                    <input type="text" id="waitTime0" name="waitTime" placeholder="e.g., 5 days">
-                    </div>
-            </div>
-
-            <button type="button" id="addStepBtn" class="add-btn">Add Another Step</button>
-
-            <button type="submit" class="generate-btn">Generate Mermaid Code</button>
+            <button type="submit" class="btn generate-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
+                  <path fill-rule="evenodd" d="M10 2c-1.717 0-3.415.224-5.002.65A1 1 0 003.5 2H3a1 1 0 00-1 1v1.252A9.966 9.966 0 001.65 8.002V10a1 1 0 00.348.752L4 12.348V16.5a1 1 0 001 1h1.252a9.966 9.966 0 003.096.35V18a1 1 0 001 1h.252L12 17.652V14a1 1 0 00-.348-.752L10 11.652V9.5A9.966 9.966 0 0011.95 6.4V5a1 1 0 00-1-1h-.252L9.5 2.348V2A1 1 0 009 1H5.748A9.966 9.966 0 0010 2zM8.5 4.002a1 1 0 00-1.414-.087L4.03 6.291A8.469 8.469 0 014.024 8H5.5a1 1 0 00.913-.587L8.5 4.002zM13.97 6.29A8.469 8.469 0 0114.5 8H16a1 1 0 00.707-1.707l-1.292-1.293A1 1 0 0013.97 6.29zM12 9.652a1 1 0 00.913.587H14.5a8.469 8.469 0 01-.53 1.708l-2.058-2.058A1 1 0 0012 9.652zm-2.587-.913a1 1 0 00-.913.587L6.45 11.385A8.469 8.469 0 016 9.676H7.05A1 1 0 008.5 8.002l.913-.587z" clip-rule="evenodd" />
+                </svg>
+                Generate Mermaid Code
+            </button>
         </form>
 
-        <div id="outputContainer" class="mt-6" style="display: none;">
-            <h2 class="text-xl font-semibold mb-2 text-gray-700">Generated Mermaid Code:</h2>
-            <p class="text-sm text-gray-600 mb-2">Review the code below. You can copy it directly or save it as a formatted Markdown file.</p>
-            <textarea id="mermaidOutput" readonly class="w-full h-64"></textarea>
-
-            <div class="output-actions">
-                 <button id="copyButton" disabled>Copy Code</button>
-                 <button id="saveMarkdownBtn" disabled>Save as Markdown (.md)</button>
+        <div id="outputContainer" class="mt-8" style="display: none;">
+            <h2 class="text-2xl font-semibold mb-3 text-gray-800">Generated Mermaid Code:</h2>
+            <p class="text-sm text-gray-600 mb-3">Review the code below. You can copy it directly or save it as a formatted Markdown file.</p>
+            <textarea id="mermaidOutput" readonly></textarea>
+            <div class="output-actions mt-4">
+                 <button id="copyButton" class="btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
+                      <path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.121A1.5 1.5 0 0117 6.621V16.5a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 017 16.5v-13z" />
+                      <path d="M5 6.5A1.5 1.5 0 016.5 5h3V3.5a1.5 1.5 0 00-1.5-1.5h-3A1.5 1.5 0 002 3.5v10A1.5 1.5 0 003.5 15h3a.75.75 0 000-1.5h-3a.75.75 0 01-.75-.75v-10A.75.75 0 015 5.75V6.5z" />
+                    </svg>
+                    Copy Code
+                </button>
+                 <button id="saveMarkdownBtn" class="btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2">
+                      <path d="M10.75 2.75a.75.75 0 00-1.5 0V8.5h-5.75a.75.75 0 000 1.5h5.75V15.75a.75.75 0 001.5 0V9.999h5.75a.75.75 0 000-1.5h-5.75V2.75z" />
+                      <path d="M3 9.5a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 9.5zM3 15.5a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 15.5zM3 3.5a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 3.5z" />
+                    </svg>
+                    Save as Markdown (.md)
+                </button>
             </div>
-             <p id="copyFeedback" class="text-sm text-green-600 mt-1" style="display: none;">Copied to clipboard!</p>
-             <p id="saveFeedback" class="text-sm text-blue-600 mt-1" style="display: none;">Markdown file download initiated.</p>
+             <p id="copyFeedback" class="text-sm text-green-600 mt-2" style="display: none;">Copied to clipboard!</p>
+             <p id="saveFeedback" class="text-sm text-sky-600 mt-2" style="display: none;">Markdown file download initiated.</p>
         </div>
-    </div> <footer class="max-w-2xl mx-auto w-full mt-auto px-6 pb-6">
-         <div class="flex justify-between items-center">
-             <span>VSM Mapper Version: %%APP_VERSION%%</span>
-             <span>Image Build: %%APP_VERSION%%</span>
+    </div> <footer class="max-w-3xl mx-auto w-full mt-auto px-6 pb-6 text-center sm:text-left">
+         <div class="sm:flex sm:justify-between sm:items-center">
+             <span class="block sm:inline mb-2 sm:mb-0">VSM Mapper Version: %%APP_VERSION%%</span>
+             <span class="block sm:inline">Image Build: %%APP_VERSION%%</span>
          </div>
     </footer>
 
     <script>
         // --- SCRIPT START ---
-        console.log("VSM Generator script loaded.");
+        console.log("VSM Generator script loaded with insert step functionality.");
 
         // --- Global Variables ---
-        let stepCounter = 1; // Tracks the next step number to add
+        let uniqueIdCounter = 0; // Used to generate unique IDs for step groups and their inputs
 
         // --- DOM Elements ---
         const form = document.getElementById('vsmForm');
         const titleInput = document.getElementById('titleInput');
         const stepsContainer = document.getElementById('stepsContainer');
-        const addStepBtn = document.getElementById('addStepBtn');
+        const addStepEndBtn = document.getElementById('addStepEndBtn');
         const outputContainer = document.getElementById('outputContainer');
         const mermaidOutput = document.getElementById('mermaidOutput');
         const copyButton = document.getElementById('copyButton');
@@ -199,120 +220,189 @@
         // --- Core Functions ---
 
         /**
-         * Adds a new set of input fields for a VSM step.
+         * Generates a unique ID string for step elements.
+         * @returns {string} A unique ID.
          */
-        function addStepInput() {
-            console.log(`Adding step ${stepCounter + 1}`);
-            const stepId = stepCounter; // Use current counter as ID for this new step
-
-            const newStepDiv = document.createElement('div');
-            newStepDiv.classList.add('input-group');
-            newStepDiv.setAttribute('data-step-id', stepId); // Store the step ID
-
-            // HTML structure for the new step input fields
-            newStepDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-lg font-semibold">Step ${stepId + 1}</h3>
-                    <button type="button" class="remove-btn" onclick="removeStep(${stepId})">Remove</button>
-                </div>
-                <label for="stepName${stepId}">Step Name:</label>
-                <input type="text" id="stepName${stepId}" name="stepName" required placeholder="e.g., Requirements">
-
-                <label for="processTime${stepId}" class="mt-2">Process Time (e.g., '1 day'):</label>
-                <input type="text" id="processTime${stepId}" name="processTime" required placeholder="e.g., 1 day">
-
-                <label for="waitTime${stepId}" class="mt-2">Wait Time Before This Step (e.g., '5 days'):</label>
-                <input type="text" id="waitTime${stepId}" name="waitTime" required placeholder="e.g., 5 days">
-            `;
-
-            stepsContainer.appendChild(newStepDiv);
-            stepCounter++; // Increment counter for the *next* step to be added
-            console.log(`Step ${stepId + 1} added. Next step will be ${stepCounter + 1}.`);
+        function generateUniqueId() {
+            uniqueIdCounter++;
+            return `step_uid_${uniqueIdCounter}`; // More robust unique ID
         }
 
         /**
-         * Removes a step's input fields based on its ID.
-         * @param {number} stepIdToRemove - The ID of the step input group to remove.
+         * Creates and returns the DOM element for a new step group.
+         * @param {string} uniqueStepId - The unique ID for this step group and its inputs.
+         * @returns {HTMLElement} The new step group div element.
          */
-        function removeStep(stepIdToRemove) {
-            console.log(`Attempting to remove step with ID: ${stepIdToRemove}`);
-            const stepToRemove = stepsContainer.querySelector(`[data-step-id="${stepIdToRemove}"]`);
-            if (stepToRemove) {
-                stepsContainer.removeChild(stepToRemove);
-                console.log(`Successfully removed step with ID: ${stepIdToRemove}`);
-                // Note: We don't re-number steps or decrement stepCounter to keep IDs unique
+        function createStepElement(uniqueStepId) {
+            const stepDiv = document.createElement('div');
+            stepDiv.classList.add('input-group');
+            stepDiv.setAttribute('data-step-id', uniqueStepId);
+
+            stepDiv.innerHTML = `
+                <div class="step-header">
+                    <h3 class="text-lg font-semibold text-gray-800">Step</h3> <div class="step-header-actions">
+                        <button type="button" class="btn insert-btn-before" title="Add Step Before This Step" onclick="insertStepBefore(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+                        </button>
+                        <button type="button" class="btn remove-btn" title="Remove This Step" onclick="removeStepElement(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <label for="stepName_${uniqueStepId}">Step Name:</label>
+                <input type="text" id="stepName_${uniqueStepId}" name="stepName" required placeholder="e.g., Feature Request">
+
+                <label for="processTime_${uniqueStepId}" class="mt-3">Process Time (e.g., '2 days'):</label>
+                <input type="text" id="processTime_${uniqueStepId}" name="processTime" required placeholder="e.g., 2 days">
+
+                <label for="waitTime_${uniqueStepId}" class="mt-3">Wait Time Before This Step:</label>
+                <input type="text" id="waitTime_${uniqueStepId}" name="waitTime" placeholder="e.g., 5 days (leave blank if first)">
+            `;
+            return stepDiv;
+        }
+
+        /**
+         * Adds a new step element to the DOM, either at the end or before a reference node.
+         * @param {HTMLElement|null} referenceNode - If provided, the new step is inserted before this node. Otherwise, appended to stepsContainer.
+         */
+        function addNewStep(referenceNode = null) {
+            const uniqueStepId = generateUniqueId();
+            const newStepElement = createStepElement(uniqueStepId);
+
+            if (referenceNode) {
+                stepsContainer.insertBefore(newStepElement, referenceNode);
+                console.log(`Inserted new step (ID: ${uniqueStepId}) before reference node.`);
             } else {
-                 console.warn(`Could not find step with ID: ${stepIdToRemove} to remove.`);
+                stepsContainer.appendChild(newStepElement);
+                console.log(`Appended new step (ID: ${uniqueStepId}) at the end.`);
+            }
+            updateDynamicUIElements(); // Crucial for re-numbering and button states
+        }
+
+        /**
+         * Event handler for the "Add Step Before" button.
+         * @param {HTMLElement} buttonElement - The "+" button that was clicked.
+         */
+        window.insertStepBefore = function(buttonElement) { // Make it globally accessible from inline onclick
+            const currentStepGroup = buttonElement.closest('.input-group');
+            if (currentStepGroup) {
+                addNewStep(currentStepGroup);
+            } else {
+                console.error("Could not find parent step group for insertion.");
             }
         }
 
         /**
-         * Extracts and validates data from all step input fields.
+         * Event handler for the "Add Step at End" button.
+         */
+        function addStepAtEnd() {
+            addNewStep(null); // Pass null to append to the end
+        }
+
+        /**
+         * Event handler for removing a step element.
+         * @param {HTMLElement} buttonElement - The "Remove" button that was clicked.
+         */
+        window.removeStepElement = function(buttonElement) { // Make it globally accessible
+            const stepToRemove = buttonElement.closest('.input-group');
+            if (stepToRemove) {
+                const stepId = stepToRemove.getAttribute('data-step-id');
+                stepsContainer.removeChild(stepToRemove);
+                console.log(`Successfully removed step with ID: ${stepId}`);
+                updateDynamicUIElements(); // Update numbering and buttons after removal
+            } else {
+                console.warn(`Could not find step group to remove.`);
+            }
+        }
+
+        /**
+         * Updates step numbers, "Remove" button visibility, and "Wait Time" placeholder for all steps.
+         * This function is called after any addition, insertion, or removal of steps.
+         */
+        function updateDynamicUIElements() {
+            const allStepGroups = stepsContainer.querySelectorAll('.input-group');
+            allStepGroups.forEach((group, index) => {
+                // Update Step Number Heading
+                const heading = group.querySelector('.step-header h3');
+                if (heading) {
+                    heading.textContent = `Step ${index + 1}`;
+                }
+
+                // Manage "Remove" Button Visibility
+                const removeBtn = group.querySelector('.remove-btn');
+                if (removeBtn) {
+                    // Only show remove button if there's more than one step
+                    removeBtn.style.display = allStepGroups.length > 1 ? 'inline-flex' : 'none';
+                }
+
+                // Update Wait Time Placeholder and requirement for the first step
+                const waitTimeInput = group.querySelector(`input[name="waitTime"]`);
+                if (waitTimeInput) {
+                    if (index === 0) {
+                        waitTimeInput.placeholder = "e.g., 5 days (leave blank, it's the first step)";
+                        // waitTimeInput.required = false; // First step wait time is optional
+                    } else {
+                        waitTimeInput.placeholder = "e.g., 5 days (required)";
+                        // waitTimeInput.required = true; // Wait time is required for subsequent steps
+                    }
+                }
+            });
+            console.log("Dynamic UI elements updated (step numbers, remove buttons, placeholders).");
+        }
+
+
+        /**
+         * Extracts and validates data from all step input fields in their current DOM order.
          * @returns {Array<Object>|null} An array of step objects if valid, otherwise null.
          */
         function getFormData() {
             console.log("Getting and validating form data...");
             const steps = [];
             const stepDivs = stepsContainer.querySelectorAll('.input-group');
-            console.log(`Found ${stepDivs.length} step input groups.`);
-            let isValid = true; // Assume valid initially
+            let isValid = true;
 
             if (stepDivs.length === 0) {
-                console.warn("No steps found in the form.");
-                alert("Error: Please add at least one step.");
+                alert("Please add at least one step to generate the map.");
                 return null;
             }
 
             stepDivs.forEach((div, index) => {
-                const stepId = div.getAttribute('data-step-id'); // Get the step's unique ID
-                const stepNumber = index + 1; // User-facing step number (1-based)
-                const nameInput = div.querySelector(`input[name="stepName"]`);
-                const processTimeInput = div.querySelector(`input[name="processTime"]`);
-                const waitTimeInput = div.querySelector(`input[name="waitTime"]`);
+                const uniqueStepId = div.getAttribute('data-step-id');
+                const stepNumberForMsg = index + 1;
+
+                const nameInput = div.querySelector(`#stepName_${uniqueStepId}`);
+                const processTimeInput = div.querySelector(`#processTime_${uniqueStepId}`);
+                const waitTimeInput = div.querySelector(`#waitTime_${uniqueStepId}`);
 
                 let currentStepValid = true;
-                // Validate Step Name
                 if (!nameInput || !nameInput.value.trim()) {
-                    console.error(`Validation Error: Step ${stepNumber} (ID: ${stepId}) is missing a name.`);
-                    alert(`Error: Step ${stepNumber} must have a name.`);
-                    isValid = false;
-                    currentStepValid = false;
+                    alert(`Error: Step ${stepNumberForMsg} must have a name.`); isValid = false; currentStepValid = false;
                 }
-                // Validate Process Time
                 if (!processTimeInput || !processTimeInput.value.trim()) {
-                     console.error(`Validation Error: Step ${stepNumber} (ID: ${stepId}) is missing process time.`);
-                     alert(`Error: Step ${stepNumber} must have a process time.`);
-                     isValid = false;
-                     currentStepValid = false;
+                    alert(`Error: Step ${stepNumberForMsg} must have a process time.`); isValid = false; currentStepValid = false;
                 }
-                 // Validate Wait Time (Required for all steps except the first one, index 0)
-                 if (index > 0 && (!waitTimeInput || !waitTimeInput.value.trim())) {
-                     console.error(`Validation Error: Step ${stepNumber} (ID: ${stepId}) is missing wait time.`);
-                     alert(`Error: Step ${stepNumber} must have a wait time (required for steps after the first).`);
-                     isValid = false;
-                     currentStepValid = false;
-                 }
+                // Wait time is required for all steps *except* the very first one (index 0)
+                if (index > 0 && (!waitTimeInput || !waitTimeInput.value.trim())) {
+                    alert(`Error: Step ${stepNumberForMsg} must have a wait time (required for steps after the first).`); isValid = false; currentStepValid = false;
+                }
 
-                // If all checks for this step passed, add its data
                 if (currentStepValid) {
-                    const stepData = {
-                        id: `S${index}`, // Internal ID for Mermaid links (S0, S1, ...)
+                    steps.push({
+                        id: `S${index}`, // Mermaid node ID based on current order
                         name: nameInput.value.trim(),
                         processTime: processTimeInput.value.trim(),
-                        // Wait time is null only if it's the first step AND the input is empty
-                        waitTime: (index === 0 && !waitTimeInput.value.trim()) ? null : waitTimeInput.value.trim()
-                    };
-                     console.log(`Data for Step ${stepNumber} (ID: ${stepData.id}):`, stepData);
-                    steps.push(stepData);
+                        // Wait time is null if it's the first step AND the input is empty/whitespace
+                        waitTime: (index === 0 && (!waitTimeInput.value || !waitTimeInput.value.trim())) ? null : waitTimeInput.value.trim()
+                    });
                 }
             });
 
             if (!isValid) {
-                console.error("Form data validation failed overall.");
-                return null; // Indicate validation failure
+                console.error("Form data validation failed."); return null;
             }
-
-            console.log("Form data collected and validated successfully:", steps);
+            console.log("Form data collected and validated:", steps);
             return steps;
         }
 
@@ -324,316 +414,216 @@
         function generateMermaidCode(stepsData) {
             console.log("Generating Mermaid code...");
             if (!stepsData || stepsData.length === 0) {
-                console.warn("No step data provided to generate Mermaid code.");
-                return "graph LR\n    %% No steps entered"; // Return basic empty graph
+                return "graph LR\n    %% No steps entered";
             }
+            let mermaidString = "graph LR\n";
+            let totalProcessTime = 0, totalWaitTime = 0;
 
-            let mermaidString = "graph LR\n"; // Initialize Left-to-Right graph
-            let totalProcessTime = 0;
-            let totalWaitTime = 0;
-
-            // 1. Define Nodes and Process Flow Links
-            console.log("Adding process flow links...");
-            for (let i = 0; i < stepsData.length; i++) {
-                const step = stepsData[i];
-                // Escape double quotes within the name to avoid breaking Mermaid syntax
-                const escapedName = step.name.replace(/"/g, '#quot;');
-                // Define the node: ID["Escaped Name"]
+            // Define nodes and process flow links
+            stepsData.forEach((step, i) => {
+                const escapedName = step.name.replace(/"/g, '#quot;'); // Handle quotes in names
                 mermaidString += `    ${step.id}["${escapedName}"]\n`;
-
-                // Link to the next step with process time, if not the last step
-                if (i < stepsData.length - 1) {
-                    const nextStep = stepsData[i + 1];
-                    mermaidString += `    ${step.id} -->|${step.processTime}| ${nextStep.id}\n`;
+                if (i < stepsData.length - 1) { // Link to next step if not the last
+                    mermaidString += `    ${step.id} -->|${step.processTime}| ${stepsData[i+1].id}\n`;
                 }
+                const ptMatch = step.processTime.match(/\d+(\.\d+)?/); // Extract number
+                if (ptMatch) totalProcessTime += parseFloat(ptMatch[0]);
+            });
 
-                // Calculate total process time (attempt to parse number)
-                const ptMatch = step.processTime.match(/\d+(\.\d+)?/); // Match integer or decimal
-                if (ptMatch) {
-                    totalProcessTime += parseFloat(ptMatch[0]);
-                } else {
-                    console.warn(`Could not parse process time number from: '${step.processTime}' for step ${i + 1}`);
-                }
-            }
-
-            // 2. Add Wait Time Links (Dotted)
-            console.log("Adding wait time links...");
+            // Add wait time links (between previous and current step)
             mermaidString += "\n    %% Add wait times\n";
-            for (let i = 1; i < stepsData.length; i++) { // Start from the second step (index 1)
+            for (let i = 1; i < stepsData.length; i++) { // Start from the second step
                 const step = stepsData[i];
-                const prevStep = stepsData[i - 1];
-                // Wait time should exist for steps > 0 due to validation
-                if (step.waitTime) {
+                const prevStep = stepsData[i-1];
+                if (step.waitTime) { // Wait time should exist for steps > 0 due to validation
                     mermaidString += `    ${prevStep.id} -.->|Wait: ${step.waitTime}| ${step.id}\n`;
-                    // Calculate total wait time
                     const wtMatch = step.waitTime.match(/\d+(\.\d+)?/);
-                    if (wtMatch) {
-                        totalWaitTime += parseFloat(wtMatch[0]);
-                    } else {
-                        console.warn(`Could not parse wait time number from: '${step.waitTime}' for step ${i + 1}`);
-                    }
+                    if (wtMatch) totalWaitTime += parseFloat(wtMatch[0]);
                 }
             }
 
-            // 3. Add Metrics Subgraph
-            console.log("Adding metrics subgraph...");
             const leadTime = totalProcessTime + totalWaitTime;
-            // Calculate Flow Efficiency, handle potential division by zero
             const flowEfficiency = leadTime > 0 ? Math.round((totalProcessTime / leadTime) * 100) : 0;
-
             mermaidString += `\n    %% Add process metrics\n`;
             mermaidString += `    subgraph Metrics\n`;
-            // Use 'units' as a generic time unit label
-            mermaidString += `        PT[Process Time: ${totalProcessTime} units]\n`;
-            mermaidString += `        LT[Lead Time: ${leadTime} units]\n`;
+            mermaidString += `        PT[Process Time: ${totalProcessTime.toFixed(1)} units]\n`; // .toFixed(1) for consistency
+            mermaidString += `        LT[Lead Time: ${leadTime.toFixed(1)} units]\n`;
             mermaidString += `        FE[Flow Efficiency: ${flowEfficiency}%]\n`;
-            mermaidString += `    end\n`; // Close subgraph
-
+            mermaidString += `    end\n`;
             console.log("Mermaid code generation complete.");
             return mermaidString;
         }
 
+
         /**
           * Handles the form submission: validates, generates code, updates UI.
-          * @param {Event} event - The form submission event.
           */
          function handleSubmit(event) {
-             event.preventDefault(); // Prevent default page reload
+             event.preventDefault();
              console.log("Form submitted.");
-
              // Reset output state
              outputContainer.style.display = 'none';
-             copyButton.disabled = true;
-             saveMarkdownBtn.disabled = true;
-             copyFeedback.style.display = 'none';
-             saveFeedback.style.display = 'none';
-             mermaidOutput.value = ''; // Clear previous output
+             copyButton.disabled = true; saveMarkdownBtn.disabled = true;
+             copyFeedback.style.display = 'none'; saveFeedback.style.display = 'none';
+             mermaidOutput.value = '';
 
              try {
-                 // Get and validate form data
                  const formData = getFormData();
-
-                 // If validation failed (returned null) or no steps, stop processing
-                 if (!formData) {
-                     console.warn("Form validation failed. Mermaid code not generated.");
-                     return; // Exit function
-                 }
-
-                 // Generate the Mermaid code string
+                 if (!formData) { console.warn("Validation failed. Mermaid code not generated."); return; }
                  const mermaidCode = generateMermaidCode(formData);
-
-                 // Update the UI
-                 mermaidOutput.value = mermaidCode; // Display code in textarea
-                 outputContainer.style.display = 'block'; // Show the output section
-                 copyButton.disabled = false; // Enable action buttons
-                 saveMarkdownBtn.disabled = false;
+                 mermaidOutput.value = mermaidCode;
+                 outputContainer.style.display = 'block';
+                 copyButton.disabled = false; saveMarkdownBtn.disabled = false;
                  console.log("Mermaid code generated and displayed. Output buttons enabled.");
-
              } catch (error) {
-                 // Catch unexpected errors during processing
                  console.error("Error during form submission or Mermaid generation:", error);
                  alert("An unexpected error occurred while generating the diagram. Check the console (F12) for details.");
-                 // Ensure output is hidden on error
                  outputContainer.style.display = 'none';
              }
          }
-
-        // --- Utility Functions ---
 
         /**
          * Copies the generated Mermaid code from the textarea to the clipboard.
          */
         function copyToClipboard() {
-             if (copyButton.disabled) return; // Prevent action if button is disabled
-
-             mermaidOutput.select(); // Select the text in the textarea
-             mermaidOutput.setSelectionRange(0, 99999); // Ensure selection works on mobile
-
+             if (copyButton.disabled) return;
+             mermaidOutput.select();
+             mermaidOutput.setSelectionRange(0, 99999); // For mobile devices
              try {
-                 // Use the modern Clipboard API first
                  navigator.clipboard.writeText(mermaidOutput.value)
                      .then(() => {
                          console.log("Mermaid code copied to clipboard via Clipboard API.");
-                         copyFeedback.style.display = 'inline'; // Show success feedback
-                         saveFeedback.style.display = 'none';   // Hide other feedback
-                         setTimeout(() => { copyFeedback.style.display = 'none'; }, 2000); // Hide after 2s
+                         copyFeedback.textContent = "Copied to clipboard!";
+                         copyFeedback.className = "text-sm text-green-600 mt-2";
+                         copyFeedback.style.display = 'inline';
+                         saveFeedback.style.display = 'none';
+                         setTimeout(() => { copyFeedback.style.display = 'none'; }, 2500);
                      })
                      .catch(err => {
                          console.error('Failed to copy using navigator.clipboard: ', err);
-                         copyUsingExecCommand(); // Attempt fallback if modern API fails
+                         copyUsingExecCommand(); // Attempt fallback
                      });
              } catch (err) {
                   console.error('Clipboard API access error or not supported: ', err);
-                  copyUsingExecCommand(); // Attempt fallback if API access throws error
+                  copyUsingExecCommand(); // Attempt fallback
              }
          }
 
         /**
          * Fallback method for copying text using the older document.execCommand.
-         * Less reliable and may be deprecated in browsers.
          */
          function copyUsingExecCommand() {
              try {
-                 const successful = document.execCommand('copy'); // Attempt copy
+                 const successful = document.execCommand('copy');
                  if (successful) {
                      console.log("Mermaid code copied to clipboard (using execCommand fallback).");
+                     copyFeedback.textContent = "Copied (fallback)!";
+                     copyFeedback.className = "text-sm text-green-600 mt-2";
                      copyFeedback.style.display = 'inline';
                      saveFeedback.style.display = 'none';
-                     setTimeout(() => { copyFeedback.style.display = 'none'; }, 2000);
+                     setTimeout(() => { copyFeedback.style.display = 'none'; }, 2500);
                  } else {
-                     // execCommand returned false
                      console.error('execCommand fallback failed to copy.');
-                     alert('Failed to copy text automatically. Please select the text and copy it manually (Ctrl+C or Cmd+C).');
+                     copyFeedback.textContent = "Copy failed. Please copy manually.";
+                     copyFeedback.className = "text-sm text-red-600 mt-2";
+                     copyFeedback.style.display = 'inline';
+                     setTimeout(() => { copyFeedback.style.display = 'none'; }, 3000);
                  }
              } catch (execErr) {
-                 // execCommand threw an error
                  console.error('execCommand fallback failed with error: ', execErr);
-                 alert('Failed to copy text automatically. Please select the text and copy it manually (Ctrl+C or Cmd+C).');
+                 copyFeedback.textContent = "Copy failed. Please copy manually.";
+                 copyFeedback.className = "text-sm text-red-600 mt-2";
+                 copyFeedback.style.display = 'inline';
+                 setTimeout(() => { copyFeedback.style.display = 'none'; }, 3000);
              }
          }
 
         /**
          * Pads a single-digit number with a leading zero.
-         * @param {number} num - The number to pad.
-         * @returns {string} The padded number as a string.
          */
-        function padZero(num) {
-            return num < 10 ? '0' + num : num.toString();
-        }
+        function padZero(num) { return num < 10 ? '0' + num : num.toString(); }
 
         /**
-         * Generates a filename for the Markdown file. Uses sanitized title or a timestamp.
-         * @param {string} title - The title entered by the user in the title input field.
-         * @returns {string} The generated filename ending in .md.
+         * Generates a filename for the Markdown file.
          */
         function getMarkdownFilename(title) {
             const trimmedTitle = title.trim();
             if (trimmedTitle) {
-                // Sanitize title for use in filename:
-                // 1. Replace whitespace sequences with single underscore
-                // 2. Remove characters unsafe for filenames
-                const sanitized = trimmedTitle
-                    .replace(/\s+/g, '_')
-                    .replace(/[\\/:*?"<>|#%&{}]/g, ''); // Removed more potentially problematic chars
-                // Prevent empty filename after sanitization
-                return sanitized ? `${sanitized}.md` : `vsm_diagram_${Date.now()}.md`;
+                const sanitized = trimmedTitle.replace(/\s+/g, '_').replace(/[\\/:*?"<>|#%&{}]/g, '');
+                return (sanitized ? `${sanitized}` : `vsm_diagram_${Date.now()}`) + ".md";
             } else {
-                // Generate timestamp-based filename if no title provided: MMDDHHMMSS.md
                 const now = new Date();
-                const month = padZero(now.getMonth() + 1); // Month is 0-indexed
-                const day = padZero(now.getDate());
-                const hours = padZero(now.getHours());
-                const minutes = padZero(now.getMinutes());
-                const seconds = padZero(now.getSeconds());
-                return `vsm_${month}${day}_${hours}${minutes}${seconds}.md`;
+                return `vsm_${padZero(now.getMonth() + 1)}${padZero(now.getDate())}_${padZero(now.getHours())}${padZero(now.getMinutes())}${padZero(now.getSeconds())}.md`;
             }
         }
 
         /**
-         * Generates the full Markdown content string including title and fenced code block.
-         * @param {string} title - The title entered by the user.
-         * @param {string} mermaidCode - The generated Mermaid code string.
-         * @param {string} filename - The generated filename (used for title if original title was blank).
-         * @returns {string} The complete Markdown string ready for download.
+         * Generates the full Markdown content string.
          */
         function generateMarkdownContent(title, mermaidCode, filename) {
-            // Use the provided title, or derive a title from the filename if the input was blank
-            const displayTitle = title.trim() || filename.replace('.md', '').replace(/_/g, ' '); // Make filename title readable
-
-            // Construct the Markdown string ensuring fences are on their own lines
-            const markdownString = `# ${displayTitle}\n\n` + // Title H1, followed by blank line
-                                  `Here is the visual representation of our process flow:\n\n` + // Explanatory text, blank line
-                                  "```mermaid\n" +   // Opening fence with language identifier, newline
-                                  mermaidCode + "\n" + // The Mermaid code itself, ensure it ends with newline
-                                  "```\n\n" +        // Closing fence, newline, blank line
-                                  `*Generated by VSM Mermaid Generator*`; // Footer text
-
-            console.log("Generated Markdown Content:\n", markdownString); // Log the final markdown
-            return markdownString;
+            const displayTitle = title.trim() || filename.replace('.md', '').replace(/_/g, ' ');
+            return `# ${displayTitle}\n\nHere is the visual representation of our process flow:\n\n\`\`\`mermaid\n${mermaidCode.trimEnd()}\n\`\`\`\n\n*Generated by VSM Mermaid Generator*`;
         }
-
 
         /**
          * Creates a Blob and triggers a browser download for the given content.
-         * @param {string} filename - The desired filename for the downloaded file.
-         * @param {string} content - The text content to be included in the file.
          */
         function downloadFile(filename, content) {
             try {
-                // Create a Blob (Binary Large Object) with the Markdown content
                 const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
-
-                // Create a temporary anchor element (link) to trigger the download
                 const link = document.createElement("a");
-
-                // Create a URL representing the Blob object
                 const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url); // Set the link's target to the Blob URL
-                link.setAttribute("download", filename); // Set the filename for the download
-                link.style.visibility = 'hidden'; // Make the link invisible
-
-                // Append the link to the document, click it, then remove it
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
                 document.body.appendChild(link);
-                link.click(); // Programmatically click the link to start download
-                document.body.removeChild(link); // Clean up by removing the temporary link
-
-                // Revoke the Blob URL to free up resources (important!)
+                link.click();
+                document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
                 console.log(`Markdown file download initiated as: ${filename}`);
-                // Show feedback message to the user
+                saveFeedback.textContent = `Saved as ${filename}`;
+                saveFeedback.className = "text-sm text-sky-600 mt-2";
                 saveFeedback.style.display = 'inline';
-                copyFeedback.style.display = 'none'; // Hide other feedback
-                setTimeout(() => { saveFeedback.style.display = 'none'; }, 3000); // Hide after 3s
+                copyFeedback.style.display = 'none';
+                setTimeout(() => { saveFeedback.style.display = 'none'; }, 3000);
 
             } catch(error) {
-                 // Handle errors during file download process
                  console.error("Error triggering file download:", error);
-                 alert("An error occurred while trying to save the file. Please try copying the code manually.");
-                 saveFeedback.style.display = 'none'; // Hide feedback on error
+                 saveFeedback.textContent = "Save failed. Please try copying code.";
+                 saveFeedback.className = "text-sm text-red-600 mt-2";
+                 saveFeedback.style.display = 'inline';
+                 setTimeout(() => { saveFeedback.style.display = 'none'; }, 3000);
             }
         }
 
         /**
          * Handles the click event for the "Save as Markdown" button.
-         * Retrieves code, generates filename/content, and triggers download.
          */
         function handleSaveMarkdown() {
-            if (saveMarkdownBtn.disabled) return; // Prevent action if button is disabled
-
+            if (saveMarkdownBtn.disabled) return;
             console.log("Save as Markdown button clicked.");
-            const mermaidCode = mermaidOutput.value; // Get code from textarea
-
-            // Basic check if there's code to save
+            const mermaidCode = mermaidOutput.value;
             if (!mermaidCode || mermaidCode.startsWith("graph LR\n    %% No steps entered")) {
                 alert("Please generate valid Mermaid code first before saving.");
-                console.warn("Save attempt with no valid Mermaid code in output.");
                 return;
             }
-
-            // Get the title from the input field
             const title = titleInput.value;
-            // Generate a suitable filename
             const filename = getMarkdownFilename(title);
-            // Generate the full Markdown content string
             const markdownContent = generateMarkdownContent(title, mermaidCode, filename);
-
-            // Trigger the download
             downloadFile(filename, markdownContent);
         }
 
 
         // --- Event Listeners Setup ---
-        // Assign functions to button click/form submit events
-        addStepBtn.addEventListener('click', addStepInput);
+        addStepEndBtn.addEventListener('click', addStepAtEnd);
         form.addEventListener('submit', handleSubmit);
         copyButton.addEventListener('click', copyToClipboard);
         saveMarkdownBtn.addEventListener('click', handleSaveMarkdown);
 
-
         // --- Initial Page Setup ---
-        console.log("Adding initial event listeners and setting initial state.");
-        // Ensure output action buttons are disabled when the page first loads
+        console.log("Initializing page: adding first step and disabling output buttons.");
+        addNewStep(); // Add the first step by default when the page loads
         copyButton.disabled = true;
         saveMarkdownBtn.disabled = true;
 
