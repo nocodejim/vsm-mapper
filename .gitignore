@@ -10,3 +10,4 @@
 # Ignore Python virtual environment
 .venv/
 a/tmp/vsm_test_downloads/
+jimmy.md
