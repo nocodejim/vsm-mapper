@@ -364,10 +364,17 @@
 
             stepsData.forEach((step, i) => {
                 const escapedName = step.name.replace(/"/g, '#quot;');
-                mermaidString += `    ${step.id}["${escapedName}"]\n`;
-                if (i < stepsData.length - 1) {
+                // MODIFICATION START
+                if (i === stepsData.length - 1) { // If it's the last step
+                    // Append process time to the node label if processTime is not empty or just whitespace
+                    const ptDisplay = step.processTime.trim() ? ` (${escapeHTML(step.processTime)})` : '';
+                    mermaidString += `    ${step.id}["${escapedName}${ptDisplay}"]\n`;
+                } else { // For all other steps
+                    mermaidString += `    ${step.id}["${escapedName}"]\n`;
                     mermaidString += `    ${step.id} -->|${escapeHTML(step.processTime)}| ${stepsData[i+1].id}\n`;
                 }
+                // MODIFICATION END
+
                 const ptMatch = step.processTime.match(/\d+(\.\d+)?/);
                 if (ptMatch) totalProcessTime += parseFloat(ptMatch[0]);
             });
