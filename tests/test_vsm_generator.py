@@ -29,7 +29,7 @@ graph LR
     S3 -->|14| S4
     S4["Test"]
     S4 -->|5| S5
-    S5["Production"]
+    S5["Production (1)"]
 
     %% Add wait times
     S0 -.->|Wait: 5| S1

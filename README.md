@@ -145,6 +145,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📊 Example Output
 
+Note: The process time of the final step in the VSM is displayed within the step's node label itself (e.g., `LastStepName (ProcessTime)`).
 ```mermaid
 graph LR
     S0["Feature Request"] -->|2d| S1
