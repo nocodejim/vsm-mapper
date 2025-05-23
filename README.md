@@ -1,112 +1,172 @@
 # Value Stream Map (VSM) Mermaid Generator
 
-This project provides a simple web interface to generate Mermaid syntax for Value Stream Maps. It allows users to define VSM steps with process and wait times, and then generates the corresponding Mermaid code. Additionally, it supports importing existing Mermaid VSM code to populate the editor.
+A web-based tool that simplifies the creation of Value Stream Maps using Mermaid diagram syntax. Features an intuitive interface, live preview capabilities, and automated flow efficiency calculations.
 
-## Features
+## ✨ Features
 
-* **Dynamic Step Creation:** Easily add, insert, and remove steps in your Value Stream Map.
-* **Time Inputs:** Specify process time for each step and wait time between steps.
-* **Automatic Metrics Calculation:** Calculates Total Process Time, Total Wait Time, Lead Time, and Flow Efficiency.
-* **Mermaid Code Generation:** Outputs `graph LR` Mermaid syntax, including a subgraph for the calculated VSM metrics.
-* **Import Existing Diagrams:** Load VSM data by pasting existing Markdown (containing a Mermaid block) or raw Mermaid code directly into the tool.
-* **Code Output & Export:**
-    * Display generated Mermaid code in a read-only text area.
-    * "Copy Code" button to easily copy the syntax.
-    * "Save as Markdown (.md)" button to download a complete Markdown file with a title and the Mermaid code block.
-* **Dockerized Application:** Easy to deploy and run using Docker.
-* **Version Display:** Footer shows application and image build versions (when deployed via the provided `deploy.sh` script with versioning).
+* **Interactive Web Interface**: Easy-to-use form for creating VSM diagrams step by step
+* **Live Preview**: Visualize your diagrams in real-time with zoom and fullscreen support
+* **PNG Export**: Save high-quality images of your diagrams directly from the preview
+* **Mermaid Syntax Generation**: Automatically generates valid Mermaid code for your VSMs
+* **Import/Export**: Load existing diagrams and save in multiple formats
+* **Flow Metrics**: Automatic calculation of process time, lead time, and flow efficiency
+* **Docker Deployment**: Consistent environment across all platforms
+* **Zero Dependencies**: Pure client-side application, no backend required
 
-## Project Structure
+## 🚀 Quick Start
 
-* `/app`: Contains the web interface (`index.html`) and its `Dockerfile`.
-* `/diagrams`: The recommended directory to save your user-generated `.mmd` or `.md` files.
-* `/scripts`: Contains helper scripts:
-    * `init_project.sh`: Sets up the basic project structure.
-    * `deploy.sh`: Builds the Docker image and runs the web application container.
-    * `setup_test_env.sh`: Sets up the Python virtual environment for automated UI testing.
-* `/tests`: Contains automated UI tests (`test_vsm_generator.py`) and test instructions.
-* `README.md`: This file.
-* `instructions.md`: Comprehensive guide for setting up the entire project from scratch.
-* `container_only_usage.md`: Guide for users who only want to run a pre-built Docker image.
+1. **Run with Docker:**
+   ```bash
+   docker run -d -p 8080:8080 --name vsm-generator buckeye90/vsm-generator-app
+   ```
 
-## Quick Start
+2. **Access the Interface:**
+   Open your browser and navigate to `http://localhost:8080`
 
-1.  **Prerequisites:** Ensure Docker is installed and running.
-2.  **Clone/Download Project:** Get the project files onto your local machine.
-3.  **Build and Deploy:**
-    * Navigate to the project's root directory in your terminal.
-    * Run the deployment script: `./scripts/deploy.sh` (you can optionally pass a version tag like `./scripts/deploy.sh 1.0.0`).
-4.  **Access the Application:** Open your web browser and go to `http://localhost:8080`.
+3. **Create Your First Diagram:**
+   - Add steps with process times
+   - Include wait times between steps
+   - Generate and preview your diagram
+   - Export as Markdown or PNG
 
-## Using the VSM Generator
+## 📁 Project Structure
 
-### Creating a New Diagram
+```
+vsm_mermaid_generator/
+├── app/                    # Web application files
+│   ├── index.html         # Main application (HTML/JS/CSS)
+│   └── Dockerfile         # Container configuration
+├── scripts/               # Automation scripts
+│   ├── init_project.sh   # Project setup
+│   ├── deploy.sh         # Build and run container
+│   └── setup_test_env.sh # Test environment setup
+├── tests/                 # Test suite
+│   ├── test_vsm_generator.py    # Selenium UI tests
+│   └── test_instructions.md     # Testing guide
+├── docs/                  # Documentation
+│   ├── preview_feature.md # Preview feature guide
+│   └── ...               # Additional docs
+└── diagrams/             # Sample diagrams
+```
 
-1.  **Diagram Title (Optional):** Enter a title for your VSM. This will be used in the downloaded Markdown file.
-2.  **Define Steps:**
-    * The interface starts with one step.
-    * **Step Name:** Enter a descriptive name for the step (e.g., "Requirement Gathering").
-    * **Process Time:** Enter the time taken to complete this step (e.g., "2 days", "4h").
-    * **Wait Time:** For all steps *except the first*, enter the waiting time that occurs *before* this step begins (e.g., "1 day", "2h"). Leave blank for the first step.
-    * **Add Step at End:** Click this button to append a new step to the end of your VSM.
-    * **Add Step Before (Plus Icon):** Click the `+` icon next to a step's "Remove" button to insert a new step *before* that specific step.
-    * **Remove Step (X Icon):** Click the `X` icon to remove a specific step. The first step cannot be removed if it's the only one.
-3.  **Generate Code:** Once all steps are defined, click the "**Generate Mermaid Code**" button.
-4.  **Review Output:**
-    * The generated Mermaid syntax will appear in the "Generated Mermaid Code" text area.
-    * Calculated metrics (Total Process Time, Lead Time, Flow Efficiency) will be included as a subgraph.
-5.  **Use the Code:**
-    * Click "**Copy Code**" to copy the syntax to your clipboard.
-    * Click "**Save as Markdown (.md)**" to download a Markdown file containing the diagram title and the Mermaid code block.
+## 🎯 Key Features Explained
 
-### Loading an Existing Diagram from Text
+### Live Preview Mode
+- **Real-time Rendering**: See your VSM diagram as it will appear
+- **Interactive Controls**: Zoom (25%-400%), pan, and fullscreen
+- **Screenshot Capture**: Save diagrams as PNG with one click
+- **Keyboard Shortcuts**: Quick navigation with +/-/0/Esc keys
 
-You can also load an existing VSM diagram if you have its Mermaid code or a Markdown file containing it.
+### Automated Calculations
+- **Process Time**: Sum of all active work periods
+- **Lead Time**: Total time from start to finish
+- **Flow Efficiency**: Percentage of value-adding time
 
-1.  **Locate the Import Section:** Scroll down below the "Generated Mermaid Code" output area. You will find a button labeled "**Load Diagram from Text**".
-2.  **Expand the Section:** Click the "**Load Diagram from Text**" button. This will expand a section allowing you to input your code. The button text will change to "Hide Diagram Import".
-3.  **Paste Your Code:** In the "Paste Markdown or Mermaid Code" textarea, paste either:
-    * The raw Mermaid code for your VSM (starting with `graph LR` or similar).
-    * The full content of a Markdown file that includes a Mermaid code block (e.g., ```mermaid ... ```). The tool will attempt to extract the Mermaid part.
-4.  **Parse and Load:** Click the "**Parse and Load**" button.
-    * The tool will attempt to parse the VSM steps from your pasted text.
-    * If successful, the "Create or Modify Diagram Steps" form above will be cleared and repopulated with the steps from your imported diagram.
-    * You will see a success or error message below the "Parse and Load" button.
-5.  **Clear Import Text (Optional):** If you want to clear the pasted text from the import textarea, click the "**Clear Text**" button.
-6.  **Modify and Generate:** Once loaded, you can modify the steps in the form as if you created them manually, and then click "**Generate Mermaid Code**" to get updated Mermaid syntax or save a new Markdown file.
-7.  **Collapse the Section:** Click "**Hide Diagram Import**" to collapse the import section.
+### Import/Export Options
+- **Mermaid Code**: Copy to clipboard for use in documentation
+- **Markdown Files**: Complete documents with embedded diagrams
+- **PNG Images**: High-resolution exports for presentations
 
-## Viewing Generated Diagrams
+## 🛠️ Development Setup
 
-Mermaid code can be rendered by various tools:
+1. **Clone the Repository:**
+   ```bash
+   git clone [repository-url]
+   cd vsm_mermaid_generator
+   ```
 
-* Online editors like the official [Mermaid Live Editor](https://mermaid.live).
-* Markdown editors and previewers with Mermaid support (e.g., VS Code with Mermaid extensions, Obsidian, Typora).
-* Documentation generators like MkDocs (with plugins), Docusaurus, etc.
+2. **Initialize Project Structure:**
+   ```bash
+   ./scripts/init_project.sh
+   ```
 
-## Stopping the Application
+3. **Deploy Locally:**
+   ```bash
+   ./scripts/deploy.sh
+   ```
 
-To stop the Docker container running the application:
+## 🧪 Running Tests
 
-1.  Find the container ID or name (default is `vsm-generator-container` if deployed with `deploy.sh`): `docker ps`
-2.  Stop the container: `docker stop <container_id_or_name>`
-3.  Optionally, remove the container: `docker rm <container_id_or_name>`
+1. **Setup Test Environment:**
+   ```bash
+   ./scripts/setup_test_env.sh
+   source .venv/bin/activate
+   ```
 
-## Further Information
+2. **Configure Test Path:**
+   Edit `tests/test_vsm_generator.py` and set `DOWNLOAD_DIR`
 
-* For detailed setup from scratch (including script creation): `instructions.md`
-* For running a pre-built Docker image: `container_only_usage.md`
-* For setting up and running UI tests: `tests/test_instructions.md`
+3. **Run Tests:**
+   ```bash
+   python tests/test_vsm_generator.py
+   ```
 
-## Versioning
+## 📖 Documentation
 
-The application displays two pieces of version information in the footer of the web interface:
+- **[User Guide](instructions.md)**: Complete usage instructions
+- **[Preview Feature](docs/preview_feature.md)**: Detailed preview functionality guide
+- **[Container Usage](container_only_usage.md)**: Docker deployment options
+- **[Testing Guide](tests/test_instructions.md)**: How to run and write tests
+- **[API Documentation](docs/docs-index.md)**: Technical reference
 
-1.  **VSM Mapper Version:** This indicates the specific release of the application.
-    *   It is set by the `APP_VERSION` variable within the `scripts/deploy.sh` script.
-    *   To release a new version of the application, you should update the value of `APP_VERSION` in this script (e.g., `APP_VERSION="1.6"`).
-    *   The current `APP_VERSION` is "1.5".
-2.  **Image Build:** This is a tag representing when the Docker image was built.
-    *   It is automatically generated as a timestamp in the format `YYYYMMDD-HHMMSS` by the `scripts/deploy.sh` script during the `docker build` process. This helps in identifying the exact build of the deployed image.
+## 🔧 Technologies Used
 
-These version details are injected into the `app/index.html` file during the Docker image build. The `scripts/deploy.sh` script passes `APP_VERSION` and the generated `IMAGE_BUILD_TAG` as build arguments to the `docker build` command. The `Dockerfile` then uses these arguments to replace the placeholders `%%APP_VERSION%%` and `%%IMAGE_BUILD_TAG%%` in `app/index.html`.
+- **Frontend**: Vanilla JavaScript, Tailwind CSS
+- **Visualization**: Mermaid.js for diagram rendering
+- **Screenshot**: html2canvas for PNG export
+- **Container**: Docker with Alpine Linux & Nginx
+- **Testing**: Python, Selenium WebDriver
+- **CI/CD Ready**: Automated testing and deployment scripts
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Maintain zero external dependencies for the web app
+- Follow existing code patterns and conventions
+- Add tests for new features
+- Update documentation as needed
+- Ensure Docker compatibility
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Mermaid.js team for the excellent diagramming library
+- Docker community for containerization best practices
+- Contributors and testers who help improve this tool
+
+## 📊 Example Output
+
+```mermaid
+graph LR
+    S0["Feature Request"] -->|2d| S1
+    S1["Development"] -->|5d| S2
+    S2["Testing"] -->|3d| S3
+    S3["Deployment"]
+    
+    S0 -.->|Wait: 1d| S1
+    S1 -.->|Wait: 2d| S2
+    S2 -.->|Wait: 1d| S3
+    
+    subgraph Metrics
+        PT[Process Time: 10 units]
+        LT[Lead Time: 14 units]
+        FE[Flow Efficiency: 71%]
+    end
+```
+
+---
+
+**Current Version**: 1.0.0  
+**Last Updated**: November 2024  
+**Status**: Active Development
+
+For support or questions, please open an issue in the repository.
