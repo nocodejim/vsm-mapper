@@ -97,3 +97,16 @@ To stop the Docker container running the application:
 * For detailed setup from scratch (including script creation): `instructions.md`
 * For running a pre-built Docker image: `container_only_usage.md`
 * For setting up and running UI tests: `tests/test_instructions.md`
+
+## Versioning
+
+The application displays two pieces of version information in the footer of the web interface:
+
+1.  **VSM Mapper Version:** This indicates the specific release of the application.
+    *   It is set by the `APP_VERSION` variable within the `scripts/deploy.sh` script.
+    *   To release a new version of the application, you should update the value of `APP_VERSION` in this script (e.g., `APP_VERSION="1.6"`).
+    *   The current `APP_VERSION` is "1.5".
+2.  **Image Build:** This is a tag representing when the Docker image was built.
+    *   It is automatically generated as a timestamp in the format `YYYYMMDD-HHMMSS` by the `scripts/deploy.sh` script during the `docker build` process. This helps in identifying the exact build of the deployed image.
+
+These version details are injected into the `app/index.html` file during the Docker image build. The `scripts/deploy.sh` script passes `APP_VERSION` and the generated `IMAGE_BUILD_TAG` as build arguments to the `docker build` command. The `Dockerfile` then uses these arguments to replace the placeholders `%%APP_VERSION%%` and `%%IMAGE_BUILD_TAG%%` in `app/index.html`.

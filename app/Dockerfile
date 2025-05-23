@@ -5,6 +5,12 @@
     # Nginx is a web server good for serving static files (like our HTML/JS)
     FROM nginx:alpine
 
+    # Define build arguments for versioning.
+    # These values are injected during the Docker build process (see deploy.sh).
+    # Default values are provided in case the arguments are not passed during build.
+    ARG APP_VERSION="N/A"
+    ARG IMAGE_BUILD_TAG="N/A"
+
     # Set the working directory inside the container
     WORKDIR /usr/share/nginx/html
 
@@ -14,6 +20,12 @@
     # Copy the HTML file from the build context (your 'app' directory)
     # into the Nginx html directory inside the container.
     COPY index.html .
+
+    # Substitute placeholders in index.html with build argument values.
+    # This uses sed to replace %%APP_VERSION%% and %%IMAGE_BUILD_TAG%%.
+    RUN sed -i "s|%%APP_VERSION%%|$APP_VERSION|g" index.html && \
+        sed -i "s|%%IMAGE_BUILD_TAG%%|$IMAGE_BUILD_TAG|g" index.html
+
     # If you had separate CSS or JS files, you would copy them too:
     # COPY style.css .
     # COPY script.js .

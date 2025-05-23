@@ -9,6 +9,11 @@
     APP_PORT=8080 # Port inside the container the app runs on (defined in Dockerfile)
     HOST_PORT=8080 # Port on your local machine to access the app
 
+    # Application Version - to be injected into the app
+    APP_VERSION="1.5"
+    # Image Build Tag - a timestamp for when the Docker image was built
+    IMAGE_BUILD_TAG=$(date +%Y%m%d-%H%M%S)
+
     # --- Script Logic ---
     echo "Starting deployment process for VSM Generator..."
 
@@ -33,10 +38,14 @@
     fi
 
     # 2. Build the Docker image
-    echo "Building Docker image '$IMAGE_NAME'..."
-    docker build -t "$IMAGE_NAME" .
+    echo "Building Docker image '$IMAGE_NAME' with version '$APP_VERSION' and build tag '$IMAGE_BUILD_TAG'..."
+    docker build \
+        --build-arg APP_VERSION="$APP_VERSION" \
+        --build-arg IMAGE_BUILD_TAG="$IMAGE_BUILD_TAG" \
+        -t "$IMAGE_NAME" .
     # The '.' means use the current directory (APP_DIR) as the build context.
     # -t tags the image with the name specified.
+    # --build-arg passes variables to the Dockerfile ARGs.
 
     if [ $? -ne 0 ]; then
         echo "Error: Docker image build failed."
