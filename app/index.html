@@ -245,6 +245,9 @@
 
                 <label for="waitTime_${uniqueStepId}" class="mt-3">Wait Time Before This Step:</label>
                 <input type="text" id="waitTime_${uniqueStepId}" name="waitTime" placeholder="e.g., 5 days (leave blank if first)" value="${stepData && stepData.waitTime ? escapeHTML(stepData.waitTime) : ''}">
+
+                <label for="role_${uniqueStepId}" class="mt-3">Role:</label>
+                <input type="text" id="role_${uniqueStepId}" name="role" placeholder="e.g., Developer, QA, Manager" value="${stepData && stepData.role ? escapeHTML(stepData.role) : ''}">
             `;
             return stepDiv;
         }
@@ -331,6 +334,7 @@
                 const nameInput = div.querySelector(`#stepName_${uniqueStepId}`);
                 const processTimeInput = div.querySelector(`#processTime_${uniqueStepId}`);
                 const waitTimeInput = div.querySelector(`#waitTime_${uniqueStepId}`);
+                const roleInput = div.querySelector(`#role_${uniqueStepId}`); // Added roleInput
 
                 let currentStepValid = true;
                 if (!nameInput || !nameInput.value.trim()) {
@@ -348,7 +352,8 @@
                         id: `S${index}`,
                         name: nameInput.value.trim(),
                         processTime: processTimeInput.value.trim(),
-                        waitTime: (index === 0 && (!waitTimeInput.value || !waitTimeInput.value.trim())) ? null : waitTimeInput.value.trim()
+                        waitTime: (index === 0 && (!waitTimeInput.value || !waitTimeInput.value.trim())) ? null : waitTimeInput.value.trim(),
+                        role: roleInput ? roleInput.value.trim() : '' // Added role
                     });
                 }
             });
@@ -359,27 +364,65 @@
 
         function generateMermaidCode(stepsData) {
             if (!stepsData || stepsData.length === 0) return "graph LR\n    %% No steps entered";
+
+            const predefinedColors = [
+                '#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF',
+                '#A0C4FF', '#BDB2FF', '#FFC6FF', '#FFFFFC', '#E4E4E4',
+                '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
+                '#B5B9FF', '#E2C2FF', '#FFC8DD'
+            ];
+
+            function sanitizeRoleForClassName(roleName) {
+                if (!roleName) return '';
+                // Remove special characters, replace spaces with underscores
+                // Ensure it starts with a letter, prepend "CLASS_"
+                let sanitized = roleName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                if (!sanitized.match(/^[a-zA-Z]/)) {
+                    sanitized = 'R_' + sanitized; // Ensure it starts with a letter
+                }
+                return `CLASS_${sanitized}`;
+            }
+
             let mermaidString = "graph LR\n";
             let totalProcessTime = 0, totalWaitTime = 0;
+            const uniqueRoles = new Map(); // To store unique roles and their assigned colors + sanitized names
 
+            stepsData.forEach(step => {
+                if (step.role && !uniqueRoles.has(step.role)) {
+                    const color = predefinedColors[uniqueRoles.size % predefinedColors.length];
+                    const sanitizedClassName = sanitizeRoleForClassName(step.role);
+                    uniqueRoles.set(step.role, { color, sanitizedClassName });
+                }
+            });
+
+            uniqueRoles.forEach((roleData, roleName) => {
+                mermaidString += `    classDef ${roleData.sanitizedClassName} fill:${roleData.color},stroke:#333,color:#000;\n`;
+            });
+
+            mermaidString += "\n    %% Define Step Nodes\n";
             stepsData.forEach((step, i) => {
                 const escapedName = step.name.replace(/"/g, '#quot;');
-                // MODIFICATION START
-                if (i === stepsData.length - 1) { // If it's the last step
-                    // Append process time to the node label if processTime is not empty or just whitespace
-                    const ptDisplay = step.processTime.trim() ? ` (${escapeHTML(step.processTime)})` : '';
-                    mermaidString += `    ${step.id}["${escapedName}${ptDisplay}"]\n`;
-                } else { // For all other steps
-                    mermaidString += `    ${step.id}["${escapedName}"]\n`;
+                let nodeDefinition = `    ${step.id}["${escapedName}`;
+
+                if (i === stepsData.length - 1 && step.processTime.trim()) {
+                    nodeDefinition += ` (${escapeHTML(step.processTime)})`;
+                }
+                nodeDefinition += `"]`;
+
+                if (step.role && uniqueRoles.has(step.role)) {
+                    nodeDefinition += `:::${uniqueRoles.get(step.role).sanitizedClassName}`;
+                }
+                mermaidString += nodeDefinition + "\n";
+
+                if (i < stepsData.length - 1) {
                     mermaidString += `    ${step.id} -->|${escapeHTML(step.processTime)}| ${stepsData[i+1].id}\n`;
                 }
-                // MODIFICATION END
 
                 const ptMatch = step.processTime.match(/\d+(\.\d+)?/);
                 if (ptMatch) totalProcessTime += parseFloat(ptMatch[0]);
             });
 
-            mermaidString += "\n    %% Add wait times\n";
+            mermaidString += "\n    %% Add Wait Times\n";
             for (let i = 1; i < stepsData.length; i++) {
                 const step = stepsData[i];
                 const prevStep = stepsData[i-1];
@@ -392,12 +435,24 @@
 
             const leadTime = totalProcessTime + totalWaitTime;
             const flowEfficiency = leadTime > 0 ? Math.round((totalProcessTime / leadTime) * 100) : 0;
-            mermaidString += `\n    %% Add process metrics\n`;
+            mermaidString += `\n    %% Add Process Metrics\n`;
             mermaidString += `    subgraph Metrics\n`;
             mermaidString += `        PT[Process Time: ${totalProcessTime.toFixed(1)} units]\n`;
             mermaidString += `        LT[Lead Time: ${leadTime.toFixed(1)} units]\n`;
             mermaidString += `        FE[Flow Efficiency: ${flowEfficiency}%]\n`;
             mermaidString += `    end\n`;
+
+            if (uniqueRoles.size > 0) {
+                mermaidString += `\n    %% Add Legend\n`;
+                mermaidString += `    subgraph Legend\n`;
+                uniqueRoles.forEach((roleData, originalRoleName) => {
+                    const legendNodeId = `LEGEND_${roleData.sanitizedClassName}`;
+                    // Escape originalRoleName for display in the label
+                    const escapedOriginalRoleName = originalRoleName.replace(/"/g, '#quot;');
+                    mermaidString += `        ${legendNodeId}["${escapedOriginalRoleName}"]:::${roleData.sanitizedClassName}\n`;
+                });
+                mermaidString += `    end\n`;
+            }
             return mermaidString;
         }
 
@@ -532,24 +587,57 @@
 
         function parseImportedMermaid(mermaidCode) {
             console.log("Parsing imported Mermaid code:", mermaidCode);
-            const lines = mermaidCode.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('%%') && !line.startsWith('subgraph Metrics') && !line.includes('PT[') && !line.includes('LT[') && !line.includes('FE[') && line !== 'end');
+
+            let inLegendSubgraph = false;
+            const filteredLines = mermaidCode.split('\n').map(line => line.trim()).filter(line => {
+                if (line.startsWith('subgraph Legend')) {
+                    inLegendSubgraph = true;
+                    return false; // Exclude the subgraph Legend line itself
+                }
+                if (inLegendSubgraph && line === 'end') {
+                    inLegendSubgraph = false;
+                    return false; // Exclude the end line for Legend subgraph
+                }
+                if (inLegendSubgraph) {
+                    return false; // Exclude lines within the Legend subgraph
+                }
+                return line && !line.startsWith('%%') && !line.startsWith('subgraph Metrics') && !line.includes('PT[') && !line.includes('LT[') && !line.includes('FE[') && !line.startsWith('classDef') && line !== 'end';
+            });
             
             const stepsMap = new Map(); 
             const nodeOrder = []; 
 
-            const nodeRegex = /^([A-Za-z0-9_]+)\["(.*?)"\];?$/;
+            // Regex to capture ID, name, and optional class assignment
+            const nodeRegex = /^([A-Za-z0-9_]+)\["(.*?)"\](?:[:]{3}(CLASS_[A-Za-z0-9_]+))?;?$/;
             const processLinkRegex = /^([A-Za-z0-9_]+)\s*-->\|(.*?)\|\s*([A-Za-z0-9_]+);?$/;
             const waitLinkRegex = /^([A-Za-z0-9_]+)\s*-\.->\|Wait:\s*(.*?)\|\s*([A-Za-z0-9_]+);?$/;
 
-            lines.forEach(line => {
+            function desanitizeClassNameToRole(className) {
+                if (!className || !className.startsWith('CLASS_')) {
+                    return '';
+                }
+                let role = className.substring('CLASS_'.length);
+                if (role.startsWith('R_')) { // Handle roles that started with a number
+                    role = role.substring('R_'.length);
+                }
+                return role.replace(/_/g, ' ');
+            }
+
+            filteredLines.forEach(line => {
                 const nodeMatch = line.match(nodeRegex);
                 if (nodeMatch) {
                     const id = nodeMatch[1];
                     const name = nodeMatch[2].replace(/#quot;/g, '"');
+                    const classAssignment = nodeMatch[3]; // e.g., CLASS_Some_Role or undefined
+                    const role = classAssignment ? desanitizeClassNameToRole(classAssignment) : '';
+
                     if (!stepsMap.has(id)) {
-                         stepsMap.set(id, { name: name, processTime: '', waitTime: '', originalId: id });
+                         stepsMap.set(id, { name: name, processTime: '', waitTime: '', role: role, originalId: id });
                     } else {
-                        stepsMap.get(id).name = name;
+                        // Update existing, though this typically shouldn't happen for distinct step IDs
+                        const step = stepsMap.get(id);
+                        step.name = name;
+                        step.role = role;
                     }
                 }
             });
