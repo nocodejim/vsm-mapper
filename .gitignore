@@ -11,3 +11,11 @@
 .venv/
 a/tmp/vsm_test_downloads/
 jimmy.md
+# Additional virtual environment patterns
+venv/
+env/
+test_env/
+tests/test_env/
+
+# Test-related temporary files
+/tmp/vsm_test_downloads/
