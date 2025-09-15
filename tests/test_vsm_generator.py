@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 
 # --- Configuration ---
 # !!! IMPORTANT: Set this to an existing directory where Chrome can download files !!!
@@ -29,7 +30,7 @@ graph LR
     S3 -->|14| S4
     S4["Test"]
     S4 -->|5| S5
-    S5["Production (1)"]
+    S5["Production"]
 
     %% Add wait times
     S0 -.->|Wait: 5| S1
@@ -140,15 +141,16 @@ def fill_step_data(driver, step_index, step_data):
         print(f"Error filling data for Step {step_index + 1}: {e}")
         return False
 
-def wait_for_download_complete(download_dir, timeout=30):
-    """Waits for a .md file to appear in the download directory."""
-    print(f"Waiting for Markdown file download in '{download_dir}' (timeout: {timeout}s)...")
+def wait_for_download_complete(download_dir, timeout=30, file_extension=".md"):
+    """Waits for a file with specified extension to appear in the download directory."""
+    print(f"Waiting for {file_extension} file download in '{download_dir}' (timeout: {timeout}s)...")
     start_time = time.time()
     downloaded_file_path = None
     while time.time() - start_time < timeout:
-        # Look for .md files that are not temporary download files
+        # Look for files with specified extension that are not temporary download files
         try:
-            files = [f for f in os.listdir(download_dir) if f.endswith(".md") and not f.endswith(".crdownload")]
+            files = [f for f in os.listdir(download_dir) 
+                    if f.endswith(file_extension) and not f.endswith(".crdownload")]
             if files:
                 # Assume the latest downloaded file is the correct one
                 latest_file = max([os.path.join(download_dir, f) for f in files], key=os.path.getctime)
@@ -167,7 +169,7 @@ def wait_for_download_complete(download_dir, timeout=30):
             print(f"Warning: Error checking download directory: {e}. Retrying...")
         time.sleep(0.5) # Check every half second
 
-    print("Error: Download timed out or file did not appear/stabilize.")
+    print(f"Error: {file_extension} download timed out or file did not appear/stabilize.")
     return None
 
 def extract_mermaid_block(markdown_content):
@@ -197,6 +199,160 @@ def normalize_whitespace(text):
     non_empty_lines = [line for line in lines if line]
     return "\n".join(non_empty_lines)
 
+def test_preview_functionality(driver):
+    """Tests the preview modal functionality."""
+    print("\n--- Testing Preview Functionality ---")
+    test_results = {"preview_button": False, "modal_open": False, "zoom_controls": False, 
+                   "fullscreen": False, "close_modal": False, "screenshot": False}
+    
+    try:
+        # Test 1: Check if preview button is enabled after generating code
+        print("Test 1: Checking preview button availability...")
+        preview_btn = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.ID, "previewBtn"))
+        )
+        test_results["preview_button"] = True
+        print("✓ Preview button is enabled")
+        
+        # Test 2: Click preview button and check if modal opens
+        print("Test 2: Opening preview modal...")
+        preview_btn.click()
+        
+        # Wait for modal to be visible
+        preview_modal = WebDriverWait(driver, 5).until(
+            EC.visibility_of_element_located((By.ID, "previewModal"))
+        )
+        
+        # Wait for Mermaid diagram to render
+        mermaid_preview = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "mermaidPreview"))
+        )
+        
+        # Check if SVG is rendered
+        svg_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#mermaidPreview svg"))
+        )
+        test_results["modal_open"] = True
+        print("✓ Preview modal opened and diagram rendered")
+        
+        # Test 3: Test zoom controls
+        print("Test 3: Testing zoom controls...")
+        zoom_in_btn = driver.find_element(By.ID, "zoomInBtn")
+        zoom_out_btn = driver.find_element(By.ID, "zoomOutBtn")
+        zoom_level = driver.find_element(By.ID, "zoomLevel")
+        
+        initial_zoom = zoom_level.text
+        print(f"  Initial zoom: {initial_zoom}")
+        
+        # Zoom in
+        zoom_in_btn.click()
+        time.sleep(0.5)
+        zoomed_in = zoom_level.text
+        print(f"  After zoom in: {zoomed_in}")
+        
+        # Zoom out
+        zoom_out_btn.click()
+        time.sleep(0.5)
+        zoomed_out = zoom_level.text
+        print(f"  After zoom out: {zoomed_out}")
+        
+        # Reset zoom
+        reset_zoom_btn = driver.find_element(By.ID, "resetZoomBtn")
+        reset_zoom_btn.click()
+        time.sleep(0.5)
+        reset_zoom = zoom_level.text
+        print(f"  After reset: {reset_zoom}")
+        
+        test_results["zoom_controls"] = (initial_zoom != zoomed_in and 
+                                       zoomed_in != zoomed_out and 
+                                       reset_zoom == initial_zoom)
+        if test_results["zoom_controls"]:
+            print("✓ Zoom controls working correctly")
+        else:
+            print("✗ Zoom controls not working as expected")
+        
+        # Test 4: Test fullscreen toggle
+        print("Test 4: Testing fullscreen toggle...")
+        fullscreen_btn = driver.find_element(By.ID, "fullscreenBtn")
+        minimize_btn = driver.find_element(By.ID, "minimizeBtn")
+        preview_container = driver.find_element(By.ID, "previewContainer")
+        
+        # Enter fullscreen
+        fullscreen_btn.click()
+        time.sleep(0.5)
+        has_fullscreen_class = "fullscreen" in preview_container.get_attribute("class")
+        minimize_visible = minimize_btn.is_displayed()
+        fullscreen_hidden = not fullscreen_btn.is_displayed()
+        
+        # Exit fullscreen
+        minimize_btn.click()
+        time.sleep(0.5)
+        no_fullscreen_class = "fullscreen" not in preview_container.get_attribute("class")
+        
+        test_results["fullscreen"] = (has_fullscreen_class and minimize_visible and 
+                                    fullscreen_hidden and no_fullscreen_class)
+        if test_results["fullscreen"]:
+            print("✓ Fullscreen toggle working correctly")
+        else:
+            print("✗ Fullscreen toggle not working as expected")
+        
+        # Test 5: Test screenshot functionality
+        print("Test 5: Testing screenshot (PNG save) functionality...")
+        camera_btn = driver.find_element(By.ID, "cameraBtn")
+        
+        # Clean PNG files before test
+        png_files_before = [f for f in os.listdir(DOWNLOAD_DIR) if f.endswith(".png")]
+        for png in png_files_before:
+            try:
+                os.remove(os.path.join(DOWNLOAD_DIR, png))
+            except:
+                pass
+        
+        camera_btn.click()
+        
+        # Wait for PNG download
+        png_file = wait_for_download_complete(DOWNLOAD_DIR, timeout=10, file_extension=".png")
+        if png_file:
+            test_results["screenshot"] = True
+            print(f"✓ Screenshot saved successfully: {os.path.basename(png_file)}")
+            # Verify PNG file size
+            file_size = os.path.getsize(png_file)
+            print(f"  PNG file size: {file_size} bytes")
+        else:
+            print("✗ Screenshot save failed or timed out")
+        
+        # Test 6: Test close modal
+        print("Test 6: Testing modal close...")
+        close_btn = driver.find_element(By.ID, "closePreviewBtn")
+        close_btn.click()
+        time.sleep(0.5)
+        
+        # Check if modal is hidden
+        modal_hidden = driver.find_element(By.ID, "previewModal").get_attribute("style") == "display: none;"
+        test_results["close_modal"] = modal_hidden
+        if test_results["close_modal"]:
+            print("✓ Modal closed successfully")
+        else:
+            print("✗ Modal did not close properly")
+        
+    except TimeoutException as e:
+        print(f"Timeout error during preview testing: {e}")
+    except Exception as e:
+        print(f"Unexpected error during preview testing: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # Summary
+    print("\n--- Preview Test Summary ---")
+    passed_tests = sum(test_results.values())
+    total_tests = len(test_results)
+    print(f"Passed: {passed_tests}/{total_tests}")
+    for test_name, passed in test_results.items():
+        status = "✓" if passed else "✗"
+        print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    return passed_tests == total_tests
+
 # --- Main Test Execution ---
 if __name__ == "__main__":
     print("Starting VSM Generator UI Test...")
@@ -204,6 +360,7 @@ if __name__ == "__main__":
     downloaded_file = None
     errors = []
     test_passed = False
+    preview_tests_passed = False
 
     try:
         # 0. Clean download directory (optional: ensures only test file is present)
@@ -354,6 +511,11 @@ if __name__ == "__main__":
             print(normalized_actual)
             print("----------------\n")
 
+        # 10. Test Preview Functionality (NEW)
+        if test_passed:
+            preview_tests_passed = test_preview_functionality(driver)
+            if not preview_tests_passed:
+                errors.append("Preview functionality tests failed.")
 
     except Exception as e:
         print(f"\n--- TEST FAILED ---")
@@ -371,11 +533,11 @@ if __name__ == "__main__":
              errors.append(str(e))
 
     finally:
-        # 10. Print final result
+        # 11. Print final result
         print("\n--- TEST SUMMARY ---")
-        if test_passed:
+        if test_passed and preview_tests_passed:
             # Use Unicode characters for checkmark
-            print(" \u2705\u2705\u2705 TEST PASSED \u2705\u2705\u2705")
+            print(" \u2705\u2705\u2705 ALL TESTS PASSED \u2705\u2705\u2705")
         else:
              # Use Unicode characters for cross mark
             print(" \u274C\u274C\u274C TEST FAILED \u274C\u274C\u274C")
@@ -383,7 +545,7 @@ if __name__ == "__main__":
             for i, err in enumerate(errors):
                 print(f"  {i+1}. {err}")
 
-        # 11. Cleanup
+        # 12. Cleanup
         if driver:
             print("Closing WebDriver...")
             driver.quit()
