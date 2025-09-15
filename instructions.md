@@ -203,5 +203,71 @@ When finished, stop and optionally remove the container:
 
 ---
 
+## 11. Development Rules and Guidelines
+
+### Environment Isolation Requirements
+
+**CRITICAL RULE: NO HOST SYSTEM MODIFICATIONS**
+
+When working on this project or running tests, the following rules MUST be followed:
+
+1. **Never install packages directly on the host system**
+   - Do not use `sudo apt install`, `brew install`, or similar system package managers
+   - Do not install Python packages globally with `pip install` without virtual environments
+
+2. **Always use isolated environments:**
+   - **Python development**: Use virtual environments (`python -m venv`, `virtualenv`, or `conda`)
+   - **Node.js development**: Use containers or project-local installations
+   - **System dependencies**: Use Docker containers when possible
+
+3. **Preferred isolation methods (in order):**
+   - **Docker containers** for complete isolation
+   - **Python virtual environments** for Python dependencies
+   - **Project-local installations** when containers aren't feasible
+
+4. **Testing environment setup:**
+   - All test dependencies must be installed in virtual environments
+   - Use `python -m venv test_env` before installing selenium, webdriver-manager, etc.
+   - Container-based testing is preferred when possible
+
+5. **CRITICAL: Virtual environment Git exclusion:**
+   - **ALWAYS add virtual environment directories to .gitignore**
+   - Virtual environments contain thousands of dependency files that should NEVER be committed
+   - Common venv directory names to exclude: `venv/`, `test_env/`, `.venv/`, `env/`
+
+### Example Correct Setup for Testing:
+
+```bash
+# Create isolated test environment
+python3 -m venv test_env
+
+# IMMEDIATELY add to .gitignore to prevent accidental commits
+echo "test_env/" >> .gitignore
+
+# Activate environment
+source test_env/bin/activate  # Linux/Mac
+# or: test_env\Scripts\activate  # Windows
+
+# Install test dependencies in isolation
+pip install selenium webdriver-manager
+
+# Run tests
+python tests/run_tests.py
+
+# Deactivate when done
+deactivate
+```
+
+### Why These Rules Matter:
+- Prevents system pollution and conflicts
+- Ensures reproducible development environments
+- Avoids permission issues and system instability
+- Makes it easier to clean up after development
+- Follows modern development best practices
+
+**If you need system-level dependencies, discuss containerized alternatives first.**
+
+---
+
 *For additional features and updates, check the project documentation.*  
-*Last Updated: May 2025*
+*Last Updated: December 2024*
