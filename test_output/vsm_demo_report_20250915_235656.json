@@ -1,0 +1,233 @@
+{
+  "summary": {
+    "total_tests": 4,
+    "passed_tests": 4,
+    "success_rate": 100.0,
+    "timestamp": "2025-09-15T23:56:56.744957",
+    "test_type": "Demo User Acceptance Tests"
+  },
+  "results": [
+    {
+      "name": "Agile Feature Development",
+      "industry": "Software Development",
+      "description": "Complete feature lifecycle from backlog to production",
+      "steps": [
+        [
+          "Backlog Item",
+          "0.5",
+          ""
+        ],
+        [
+          "Sprint Planning",
+          "2",
+          "3"
+        ],
+        [
+          "Development",
+          "5",
+          "1"
+        ],
+        [
+          "Code Review",
+          "1",
+          "0.5"
+        ],
+        [
+          "QA Testing",
+          "3",
+          "2"
+        ],
+        [
+          "Deployment",
+          "0.5",
+          "1"
+        ]
+      ],
+      "expected_metrics": {
+        "PT": 12,
+        "LT": 19.5,
+        "FE": 62
+      },
+      "calculated_metrics": {
+        "PT": 12.0,
+        "LT": 19.5,
+        "FE": 62
+      },
+      "passed": true,
+      "metrics_valid": true,
+      "preview_works": true,
+      "export_works": true,
+      "execution_time": 0.5004308223724365,
+      "errors": []
+    },
+    {
+      "name": "Electronics Assembly Line",
+      "industry": "Manufacturing",
+      "description": "Consumer electronics production workflow",
+      "steps": [
+        [
+          "Component Prep",
+          "15",
+          ""
+        ],
+        [
+          "PCB Assembly",
+          "45",
+          "30"
+        ],
+        [
+          "Testing",
+          "20",
+          "60"
+        ],
+        [
+          "Case Assembly",
+          "25",
+          "15"
+        ],
+        [
+          "Final QC",
+          "10",
+          "45"
+        ],
+        [
+          "Packaging",
+          "5",
+          "30"
+        ]
+      ],
+      "expected_metrics": {
+        "PT": 120,
+        "LT": 300,
+        "FE": 40
+      },
+      "calculated_metrics": {
+        "PT": 120.0,
+        "LT": 300.0,
+        "FE": 40
+      },
+      "passed": true,
+      "metrics_valid": true,
+      "preview_works": true,
+      "export_works": true,
+      "execution_time": 0.5007691383361816,
+      "errors": []
+    },
+    {
+      "name": "Emergency Department Patient Flow",
+      "industry": "Healthcare",
+      "description": "Patient journey through emergency care",
+      "steps": [
+        [
+          "Registration",
+          "5",
+          ""
+        ],
+        [
+          "Triage",
+          "10",
+          "15"
+        ],
+        [
+          "Waiting Room",
+          "0",
+          "45"
+        ],
+        [
+          "Doctor Exam",
+          "20",
+          "30"
+        ],
+        [
+          "Lab/Imaging",
+          "15",
+          "60"
+        ],
+        [
+          "Treatment",
+          "30",
+          "20"
+        ],
+        [
+          "Discharge",
+          "10",
+          "15"
+        ]
+      ],
+      "expected_metrics": {
+        "PT": 90,
+        "LT": 275,
+        "FE": 33
+      },
+      "calculated_metrics": {
+        "PT": 90.0,
+        "LT": 275.0,
+        "FE": 33
+      },
+      "passed": true,
+      "metrics_valid": true,
+      "preview_works": true,
+      "export_works": true,
+      "execution_time": 0.5010406970977783,
+      "errors": []
+    },
+    {
+      "name": "Online Order Fulfillment",
+      "industry": "E-commerce",
+      "description": "Complete order processing from placement to delivery",
+      "steps": [
+        [
+          "Order Placed",
+          "1",
+          ""
+        ],
+        [
+          "Payment Processing",
+          "2",
+          "5"
+        ],
+        [
+          "Inventory Check",
+          "3",
+          "30"
+        ],
+        [
+          "Picking",
+          "15",
+          "60"
+        ],
+        [
+          "Packing",
+          "10",
+          "15"
+        ],
+        [
+          "Shipping",
+          "5",
+          "1440"
+        ],
+        [
+          "Delivery",
+          "2",
+          "480"
+        ]
+      ],
+      "expected_metrics": {
+        "PT": 38,
+        "LT": 2068,
+        "FE": 2
+      },
+      "calculated_metrics": {
+        "PT": 38.0,
+        "LT": 2068.0,
+        "FE": 2
+      },
+      "passed": true,
+      "metrics_valid": true,
+      "preview_works": true,
+      "export_works": true,
+      "execution_time": 0.5007596015930176,
+      "errors": []
+    }
+  ]
+}
