@@ -85,8 +85,23 @@ def main():
                        help="Run specific test by name")
     parser.add_argument("--list", action="store_true",
                        help="List available tests")
+    parser.add_argument("--windowed", action="store_true",
+                       help="Run tests in windowed mode (show browser window)")
+    parser.add_argument("--headless", action="store_true",
+                       help="Run tests in headless mode (default)")
     
     args = parser.parse_args()
+    
+    # Set headless mode environment variable
+    if args.windowed:
+        os.environ['VSM_TEST_HEADLESS'] = 'false'
+        print("Running tests in windowed mode (browser window visible)")
+    elif args.headless:
+        os.environ['VSM_TEST_HEADLESS'] = 'true'
+        print("Running tests in headless mode (no browser window)")
+    else:
+        # Default to headless
+        os.environ['VSM_TEST_HEADLESS'] = 'true'
     
     if args.list:
         list_available_tests()
@@ -106,8 +121,13 @@ def main():
         print("2. Comprehensive test suite")
         print("3. List available tests")
         print("4. Run specific test")
+        print("5. Toggle display mode")
         
-        choice = input("\nSelect option (1-4): ").strip()
+        # Show current mode
+        current_mode = "headless" if os.environ.get('VSM_TEST_HEADLESS', 'true') == 'true' else "windowed"
+        print(f"\nCurrent mode: {current_mode}")
+        
+        choice = input("\nSelect option (1-5): ").strip()
         
         if choice == "1":
             success = run_basic_test()
@@ -129,6 +149,14 @@ def main():
         elif choice == "4":
             test_name = input("Enter test name: ").strip()
             success = run_specific_test(test_name)
+        elif choice == "5":
+            current_headless = os.environ.get('VSM_TEST_HEADLESS', 'true') == 'true'
+            new_mode = 'false' if current_headless else 'true'
+            os.environ['VSM_TEST_HEADLESS'] = new_mode
+            mode_text = "headless" if new_mode == 'true' else "windowed"
+            print(f"Switched to {mode_text} mode")
+            print("Please run the command again to use the new mode.")
+            return
         else:
             print("Invalid choice")
             return

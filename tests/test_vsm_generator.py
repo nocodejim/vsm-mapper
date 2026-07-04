@@ -69,9 +69,16 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 
-def setup_driver(download_dir):
-    """Sets up the Chrome WebDriver with specific download options."""
-    print(f"Setting up Chrome WebDriver. Download directory: {download_dir}")
+def setup_driver(download_dir, headless=True):
+    """Sets up the Chrome WebDriver with specific download options.
+    
+    Args:
+        download_dir (str): Directory for file downloads
+        headless (bool): Run in headless mode (default: True)
+    """
+    mode_text = "headless" if headless else "windowed"
+    print(f"Setting up Chrome WebDriver in {mode_text} mode. Download directory: {download_dir}")
+    
     # Ensure download directory exists
     if not os.path.exists(download_dir):
         print(f"Creating download directory: {download_dir}")
@@ -88,10 +95,20 @@ def setup_driver(download_dir):
         "safebrowsing.enabled": True # Enable safe browsing (recommended)
     }
     options.add_experimental_option("prefs", prefs)
-    # options.add_argument("--headless")  # Run headless (no visible browser window) - uncomment for CI/automation
+    
+    # Headless mode is now default for faster, more reliable testing
+    if headless:
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")  # Recommended for headless mode
+        print("Running in headless mode (no browser window)")
+    else:
+        print("Running in windowed mode (browser window visible)")
+        
     options.add_argument("--no-sandbox") # Often needed in CI environments
     options.add_argument("--disable-dev-shm-usage") # Overcome resource limitations
     options.add_argument("--window-size=1920,1080") # Specify window size
+    options.add_argument("--disable-web-security") # Sometimes needed for file downloads
+    options.add_argument("--allow-running-insecure-content") # For local testing
 
     try:
         # Use webdriver_manager to handle driver installation
@@ -229,7 +246,9 @@ if __name__ == "__main__":
 
 
         # 1. Setup WebDriver
-        driver = setup_driver(DOWNLOAD_DIR)
+        # Check for environment variable to override headless mode
+        headless = os.getenv('VSM_TEST_HEADLESS', 'true').lower() == 'true'
+        driver = setup_driver(DOWNLOAD_DIR, headless=headless)
         if not driver:
             raise Exception("WebDriver setup failed.")
 
@@ -420,7 +439,9 @@ class VSMGeneratorTestSuite(unittest.TestCase):
         
     def setUp(self):
         """Set up before each test"""
-        self.driver = setup_driver(self.download_dir)
+        # Check for environment variable to override headless mode
+        headless = os.getenv('VSM_TEST_HEADLESS', 'true').lower() == 'true'
+        self.driver = setup_driver(self.download_dir, headless=headless)
         self.assertIsNotNone(self.driver, "WebDriver setup failed")
         
     def tearDown(self):

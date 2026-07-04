@@ -129,6 +129,8 @@ def main():
         else:
             print(f"   source tests/test_env/bin/activate")
         print("3. Run tests: python tests/run_tests.py")
+        print("   - Tests run in headless mode by default (faster, no browser window)")
+        print("   - Use --windowed flag to see browser window for debugging")
         print("4. Deactivate when done: deactivate")
     else:
         print("\n❌ Setup failed. Please fix the issues above.")
