@@ -14,6 +14,8 @@ The test suite validates all major functionality of the VSM Generator, including
 - Preview features (when available)
 - Keyboard shortcuts
 
+**Default Mode**: Tests run in headless mode for faster execution and better CI/CD compatibility. Use `--windowed` flag for debugging with visible browser window.
+
 ## Files
 
 - `test_vsm_generator.py` - Main test file with comprehensive test suite
@@ -42,13 +44,20 @@ The test suite validates all major functionality of the VSM Generator, including
 
 3. **Run tests**:
    ```bash
-   # Interactive menu
+   # Interactive menu (headless by default)
    python tests/run_tests.py
    
-   # Specific test types
+   # Specific test types (headless by default)
    python tests/run_tests.py --basic
    python tests/run_tests.py --comprehensive
    python tests/run_tests.py --test test_01_basic_vsm_creation
+   
+   # Run with visible browser window (for debugging)
+   python tests/run_tests.py --windowed --basic
+   python tests/run_tests.py --windowed --comprehensive
+   
+   # Explicitly run headless (default behavior)
+   python tests/run_tests.py --headless --basic
    ```
 
 ## Test Categories
@@ -103,9 +112,11 @@ Tests use `/tmp/vsm_test_downloads/` for file downloads. This is automatically c
 Tests expect the VSM Generator to be running at `http://localhost:8080`.
 
 ### Browser Settings
-- Chrome runs in windowed mode (not headless) for debugging
+- **Default Mode**: Headless (no browser window, faster execution)
+- **Debug Mode**: Windowed mode available with `--windowed` flag
 - Window size: 1920x1080 (adjustable in responsive tests)
 - Downloads are automatically handled
+- GPU acceleration disabled in headless mode for stability
 
 ## Troubleshooting
 
@@ -131,9 +142,25 @@ Tests expect the VSM Generator to be running at `http://localhost:8080`.
 ### Debug Mode
 
 For debugging failed tests:
+- **Use windowed mode**: `python tests/run_tests.py --windowed --test test_name`
+- **Environment variable**: Set `VSM_TEST_HEADLESS=false` to show browser window
 - Screenshots are automatically saved on failures
-- Browser console logs can be accessed via F12
+- Browser console logs can be accessed via F12 (in windowed mode)
 - Increase timeouts in test code if needed
+
+#### Switching Between Modes
+```bash
+# Run in headless mode (default, faster)
+python tests/run_tests.py --basic
+
+# Run in windowed mode (for debugging)
+python tests/run_tests.py --windowed --basic
+
+# Set environment variable for entire session
+export VSM_TEST_HEADLESS=false  # Linux/Mac
+set VSM_TEST_HEADLESS=false     # Windows
+python tests/run_tests.py --basic
+```
 
 ## Extending Tests
 

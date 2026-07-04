@@ -251,8 +251,11 @@ source test_env/bin/activate  # Linux/Mac
 # Install test dependencies in isolation
 pip install selenium webdriver-manager
 
-# Run tests
+# Run tests (headless mode by default - faster, no browser window)
 python tests/run_tests.py
+
+# Run tests with visible browser window (for debugging)
+python tests/run_tests.py --windowed
 
 # Deactivate when done
 deactivate
